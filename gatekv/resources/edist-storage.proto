@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package gatekv_storage;
-
-service GateKV_Storage {
-    // Services
-}
