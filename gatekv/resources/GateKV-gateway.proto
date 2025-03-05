@@ -3,35 +3,34 @@ syntax = "proto3";
 package gatekv_gateway;
 
 service GateKV_Gateway {
-    rpc GatewaySetData (GatewaySetRequest) returns (GatewaySetResponse) {}
-    rpc GatewayRemData (GatewayRemRequest) returns (GatewayRemResponse) {}
-    rpc GatewayGetData (GatewayGetRequest) returns (GatewayGetResponse) {}
-    rpc GatewaySet     (GatewaySetRequest) returns (GatewaySetResponse) {}
-    rpc GatewayRem     (GatewayRemRequest) returns (GatewayRemResponse) {}
+    rpc Set (SetRequest) returns (SetResponse) {} // from user to gateway
+    rpc Get (GetRequest) returns (GetResponse) {} // from user to gateway
+    rpc Rem (RemRequest) returns (RemResponse) {} // from user to gateway
+    // SetBroadcast, RemBroadcast
 }
 
-message GatewaySetRequest {
+message SetRequest {
     string key = 1;
     string value = 2;
 }
 
-message GatewaySetResponse {
+message SetResponse {
     bool success = 1;
 }
 
-message GatewayRemRequest {
+message GetRequest {
     string key = 1;
 }
 
-message GatewayRemResponse {
-    bool success = 1;
-}
-
-message GatewayGetRequest {
-    string key = 1;
-}
-
-message GatewayGetResponse {
+message GetResponse {
     bool success = 1;
     string value = 2;
+}
+
+message RemRequest {
+    string key = 1;
+}
+
+message RemResponse {
+    bool success = 1;
 }
