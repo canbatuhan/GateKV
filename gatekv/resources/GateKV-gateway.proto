@@ -3,10 +3,22 @@ syntax = "proto3";
 package gatekv_gateway;
 
 service GateKV_Gateway {
+    rpc Register (RegisterRequest) returns (RegisterResponse) {} // To join the cluster 
+
     rpc Set (SetRequest) returns (SetResponse) {} // from user to gateway
     rpc Get (GetRequest) returns (GetResponse) {} // from user to gateway
     rpc Rem (RemRequest) returns (RemResponse) {} // from user to gateway
     // SetBroadcast, RemBroadcast
+}
+
+message RegisterRequest {
+    string alias = 1; // storage-00
+    string type = 2; // gateway or storage
+    Address sender = 3;
+}
+
+message RegisterResponse {
+    string alias = 1; // gateway-00
 }
 
 message SetRequest {
@@ -33,4 +45,9 @@ message RemRequest {
 
 message RemResponse {
     bool success = 1;
+}
+
+message Address {
+    string host = 1;
+    uint32 port = 2;
 }

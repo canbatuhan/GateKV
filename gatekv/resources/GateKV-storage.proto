@@ -3,6 +3,8 @@ syntax = "proto3";
 package gatekv_storage;
 
 service GateKV_Storage {
+    rpc Register (RegisterRequest) returns (RegisterResponse) {} // To join the cluster
+
     rpc Set (SetRequest) returns (Empty)       {} // Redirect to gateway (user -> storage)
     rpc Get (GetRequest) returns (GetResponse) {} // Handle locally
     rpc Rem (RemRequest) returns (Empty)       {} // Redirect to gateway (user -> storage)
@@ -10,6 +12,16 @@ service GateKV_Storage {
     rpc SetData (SetRequest) returns (SetResponse) {} // Gateway -> storage
     rpc GetData (GetRequest) returns (GetResponse) {} // Gateway -> storage
     rpc RemData (RemRequest) returns (RemResponse) {} // Gateway -> storage
+}
+
+message RegisterRequest {
+    string alias = 1; // storage-00
+    string type = 2; // gateway or storage
+    Address sender = 3;
+}
+
+message RegisterResponse {
+    string alias = 1; // gateway-00
 }
 
 message SetRequest {
@@ -40,4 +52,9 @@ message RemResponse {
 
 message Empty {
     // Empty message
+}
+
+message Address {
+    string host = 1;
+    uint32 port = 2;
 }
