@@ -1,4 +1,5 @@
 import random
+import asyncio
 from threading import Thread
 from typing import Dict, List
 
@@ -14,86 +15,114 @@ class GateKV_GatewayNode_Client:
         self.__gateway_stubs:Dict[str:GateKV_GatewayStub] = None # stubs["gateway-01"].Set(...)
         self.__storage_stubs:Dict[str:GateKV_StorageStub] = None # stubs["storage-01"].Set(...)
 
-    def __callSetOnGateway(self):
-        try:
+    # Callbacks for Gateway Servers
+
+    async def __callSetOnGateway(self, stub:GateKV_GatewayStub, key, value=None):
+        """try:
+            response = await stub.Set(GateKV_gateway_pb2.SetRequest(key = key, value = value))
+            return response.success
+        except Exception as e:
+            print(e.with_traceback(None))"""
+        print("Calling Set on Gateway Neighbour...")
+        return True
+
+    async def __callGetOnGateway(self, stub:GateKV_GatewayStub, key, value=None):
+        """try:
             pass
         except Exception as e:
-            print(e.with_traceback(None))
+            print(e.with_traceback(None))"""
+        print("Calling Get on Gateway Neighbour...")
+        return True, -1
 
-    def __callGetOnGateway(self):
-        try:
-            pass
+    async def __callRemOnGateway(self, stub:GateKV_GatewayStub, key, value=None):
+        """try:
+            response = await stub.Rem(GateKV_gateway_pb2.RemRequest(key = key))
+            return response.success
         except Exception as e:
-            print(e.with_traceback(None))
+            print(e.with_traceback(None))"""
+        print("Calling Remove on Gateway Neighbour...")
+        return True
 
-    def __callRemOnGateway(self):
-        try:
-            pass
+    # Callbacks for Storage Servers
+
+    async def __callSetOnStorage(self, stub:GateKV_StorageStub, key, value=None):
+        """try:
+            response = await stub.SetData(GateKV_storage_pb2.SetRequest(key = key, value = value))
+            return response.success
         except Exception as e:
-            print(e.with_traceback(None))
+            print(e.with_traceback(None))"""
+        print("Calling Set on Storage Neighbour...")
+        return True
 
-    def __callSetOnStorage(self):
-        try:
-            pass
+    async def __callGetOnStorage(self, stub:GateKV_StorageStub, key, value=None):
+        """try:
+            response = await stub.GetData(GateKV_storage_pb2.GetRequest(key = key))
+            response.success, response.value
         except Exception as e:
-            print(e.with_traceback(None))
+            print(e.with_traceback(None))"""
+        print("Calling Get on Storage Neighbour...")
+        return True, -1
 
-    def __callGetOnStorage(self):
-        try:
-            pass
+    async def __callRemOnStorage(self, stub:GateKV_StorageStub, key, value=None):
+        """try:
+            response = await stub.RemData(GateKV_storage_pb2.RemRequest(key))
+            return response.success
         except Exception as e:
-            print(e.with_traceback(None))
+            print(e.with_traceback(None))"""
+        print("Calling Remove on Storage Neighbour...")
+        return True
 
-    def __callRemOnStorage(self):
-        try:
-            pass
-        except Exception as e:
-            print(e.with_traceback(None))
+    # Broadcasting Methods
 
-    def __broadcast(self, stub, callback, response_pool, idx):
-        pass
+    async def __broadcast_to_storage(self, storage_stubs, callback, key=None, value=None):
+        tasks = [callback(stub, key, value) for stub in storage_stubs]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        return all(results)
 
-    def __broadcast_to_storage(self, owners:dict, callback):
-        response_pool = [False for _ in owners]
-        threads:List[Thread] = list()
-        for idx, (_, stub) in enumerate(owners.items()):
-            threads.append(Thread(target = self.__broadcast,
-                                  args = (stub, callback, response_pool, idx)))
-        for each in threads: each.start()
-        for each in threads: each.join()
-        return all(response_pool)
+    async def __broadcast_to_gateway(self, callback, key=None, value=None):
+        tasks = [asyncio.create_task(callback(stub, key, value))
+                 for stub in self.__gateway_stubs.values()]
+        
+    # Protocols
 
-    def __broadcast_to_gateway(self, callback):
-        threads:List[Thread] = list()
-        for idx, (_, stub) in enumerate(self.__gateway_stubs.items()):
-            threads.append(Thread(target = self.__broadcast,
-                                  args = (stub, callback, [], -1)))
-        for each in threads: each.start()
-
-    def set_protocol(self, owners):
+    async def set_protocol(self, owners, key, value):
         if owners == None:
-            storage_stubs:dict = random.sample(self.__storage_stubs,
-                                          len(self.__storage_stubs)//2 + 1)
+            storage_stubs:dict = dict(random.sample(list(self.__storage_stubs.items()),
+                                                    len(self.__storage_stubs)//2 + 1))
+            owners = list(storage_stubs.keys())
 
         else: # Owners exist
-            storage_stubs:dict = [self.__storage_stubs.get(each)
-                                  for each in owners]
+            storage_stubs:dict = dict([(each, self.__storage_stubs.get(each))
+                                       for each in owners])
 
-        # Broadcasting to storage nodes
-        need_to_rollback = self.__broadcast_to_storage(storage_stubs, self.__callSetOnStorage)
+        completed = await self.__broadcast_to_storage(storage_stubs.values(), self.__callSetOnStorage, key, value)
+        await self.__broadcast_to_gateway(self.__callSetOnGateway, key, value)
 
-        # Broadcasting to gateway nodes
-        self.__broadcast_to_gateway(self.__callSetOnGateway)
-
-        # Rollback if necessary
-        if need_to_rollback:
-            # Rollback protocol
+        if not completed:
             pass
 
-        return not need_to_rollback
+        return owners, completed
     
-    def get_protocol(self, owners):
-        pass
+    async def get_protocol(self, owners, key):
+        if owners == None:
+            return False, None
+        
+        storage_stub:GateKV_StorageStub = random.choice(self.__storage_stubs.values())
+        success, value = await self.__callGetOnStorage(storage_stub, key)
+        return success, value
+        
+    async def rem_protocol(self, owners, key):
+        if owners == None:
+            return None, False
 
-    def rem_protocol(self, owners):
-        pass
+        else: # Owners exist
+            storage_stubs:dict = dict([(each, self.__storage_stubs.get(each))
+                                       for each in owners])
+            
+        completed = await self.__broadcast_to_storage(storage_stubs.values(), self.__callRemOnStorage, key)
+        await self.__broadcast_to_gateway(self.__callRemOnGateway, key)
+
+        if not completed:
+            pass
+
+        return owners, completed
