@@ -1,3 +1,4 @@
+import random
 import grpc
 import time
 from typing import Dict 
@@ -17,7 +18,7 @@ class GateKV_StorageNode_Client:
         for alias, address in storage_addresses.items():
             channel = grpc.insecure_channel(address)
             self.__storage_stubs[alias] = GateKV_StorageStub(channel)
-
+            
     # Gateway Calls
     def callSetOnGateway(self, key, value):
         request = GateKV_gateway_pb2.SetRequest(key=key, value=value)  # Correct message name
@@ -38,32 +39,23 @@ class GateKV_StorageNode_Client:
         return response.success
 
     # Storage Calls
-    def callSetOnStorage(self, alias, key, value):
-        if alias not in self.__storage_stubs:
-            print(f"Error: Storage node {alias} not found!")
-            return False
-        request = GateKV_storage_pb2.SetRequest(key=key, value=value)
-        response = self.__storage_stubs[alias].Set(request)
-        print(f"SetData Response from {alias}: {response.success}")
-        return response.success
+    def callSetOnStorage(self, key, value):
+        pass
 
-    def callGetOnStorage(self, alias, key):
-        if alias not in self.__storage_stubs:
+    def callGetOnStorage(self, key):
+        """if alias not in self.__storage_stubs:
             print(f"Error: Storage node {alias} not found!")
             return False, ""
         request = GateKV_storage_pb2.GetRequest(key=key)
         response = self.__storage_stubs[alias].Get(request)
-        print(f"GetData Response from {alias}: {response.success}, Value: {response.value}")
-        return response.success, response.value
+        print(f"GetData Response from {alias}: {response.success}, Value: {response.value}")"""
+        # Select a random neighbour
+        stub:GateKV_StorageStub = random.choice(self.__storage_stubs.values())
+        response = stub.Get(GateKV_storage_pb2.GetRequest(key=key))
+        return response.success, ..., response.value
 
     def callRemOnStorage(self, alias, key):
-        if alias not in self.__storage_stubs:
-            print(f"Error: Storage node {alias} not found!")
-            return False
-        request = GateKV_storage_pb2.RemRequest(key=key)
-        response = self.__storage_stubs[alias].Rem(request)
-        print(f"RemData Response from {alias}: {response.success}")
-        return response.success
+        pass
 
 if __name__ == "__main__":
     # Example configuration
