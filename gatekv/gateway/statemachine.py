@@ -33,9 +33,6 @@ class GateKV_GatewayNode_ReplicatedStateMachine:
             time.sleep(timeout)
             timeout *= 2
 
-        # Trigger the machine
-        self.__machine.send_event(event.name)
-
         # Check for multi-read case
         current_state = self.__machine.get_context().get_current_state().get_id()
         if current_state == GateKV_GatewayNode_States.READING.name:
@@ -45,3 +42,6 @@ class GateKV_GatewayNode_ReplicatedStateMachine:
                 self.__stack.pop() # Pop one of the reading flags
                 if len(self.__stack) != 0:
                     return # There are some read requests left
+                
+        # Trigger the machine
+        self.__machine.send_event(event.name)

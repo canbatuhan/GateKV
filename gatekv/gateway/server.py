@@ -5,7 +5,7 @@ from gatekv.gateway.service.GateKV_gateway_pb2_grpc import GateKV_GatewayService
 from gatekv.gateway.statemachine import GateKV_GatewayNode_Events
 
 class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
-    def __init__(self, server_conf:dict, client_conf:dict, protocol_conf:dict):
+    def __init__(self, server_conf:dict, client_conf:dict):
         super().__init__()
         self.__config = server_conf
 

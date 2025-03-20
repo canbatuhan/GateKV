@@ -61,7 +61,7 @@ class GateKV_GatewayNode_Client:
         except Exception as e:
             print(e.with_traceback(None))"""
         print("Calling Get on Storage Neighbour...")
-        return True, -1
+        return True, 0
 
     async def __callRemOnStorage(self, stub:GateKV_StorageStub, key, value=None):
         """try:
@@ -99,7 +99,7 @@ class GateKV_GatewayNode_Client:
         await self.__broadcast_to_gateway(self.__callSetOnGateway, key, value)
 
         if not completed:
-            pass
+            pass # Roll-back
 
         return owners, completed
     
@@ -107,7 +107,7 @@ class GateKV_GatewayNode_Client:
         if owners == None:
             return False, None
         
-        storage_stub:GateKV_StorageStub = random.choice(self.__storage_stubs.values())
+        storage_stub:GateKV_StorageStub = self.__storage_stubs.get(random.choice(owners))
         success, value = await self.__callGetOnStorage(storage_stub, key)
         return success, value
         
@@ -123,6 +123,6 @@ class GateKV_GatewayNode_Client:
         await self.__broadcast_to_gateway(self.__callRemOnGateway, key)
 
         if not completed:
-            pass
+            pass # Roll-back
 
         return owners, completed
