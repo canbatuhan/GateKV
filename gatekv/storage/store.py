@@ -3,7 +3,7 @@ import pickledb
 class GateKV_StorageNode_LocalStore:
     def __init__(self, local_store_conf:dict):
         self.__config = local_store_conf
-        self.__store = pickledb.PickleDB()
+        self.__store = pickledb.PickleDB("storage.db")
 
     def set(self, key, value):
         entry = self.__store.get(key) # Entry is (value, version)
@@ -21,7 +21,7 @@ class GateKV_StorageNode_LocalStore:
         entry = self.__store.get(key)
         
         if entry == None:
-            return False # Key-value pair does not exist
+            return None # Key-value pair does not exist
         
         else: # Key-value pair exists
             return entry # (value, version)
