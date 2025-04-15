@@ -4,13 +4,15 @@ from gatekv.storage.client import GateKV_StorageNode_Client
 from gatekv.storage.service import GateKV_storage_pb2, GateKV_storage_pb2_grpc
 from gatekv.gateway.service import GateKV_gateway_pb2, GateKV_gateway_pb2_grpc
 from gatekv.storage.store import GateKV_StorageNode_LocalStore
+import yaml
+import argparse
 
 class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
-    def __init__(self, server_conf:dict, client_conf:dict):
+    def __init__(self, client_conf:dict, store_config:dict):
         super().__init__()
-        self.__config  = server_conf
-        self.__client  = GateKV_StorageNode_Client("localhost:50051",{"storage-01": "localhost:50052", "storage-02": "localhost:50053"})
-        self.__storage = GateKV_StorageNode_LocalStore({})
+        self.__client  = GateKV_StorageNode_Client(f"{client_conf['gateway']['host']}:{client_conf['gateway']['port']}",
+                                                   {item['alias']: f"{item['host']}:{item['port']}" for item in client_conf["storageNodes"]})
+        self.__storage = GateKV_StorageNode_LocalStore(store_config)
 
     def Register(self, request, context: grpc.ServicerContext):
         return GateKV_storage_pb2.RegisterResponse(alias=request.alias)
@@ -50,11 +52,20 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
         return GateKV_storage_pb2.RemResponse(success=False)
 
 def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    GateKV_storage_pb2_grpc.add_GateKV_StorageServicer_to_server(GateKV_StorageNode_Server({}, {}), server)
-    server.add_insecure_port('[::]:50052')
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-config", default="docs/storage-00.yaml", type=str)
+
+    args = vars(parser.parse_args())
+    CONFIG_FILE = yaml.safe_load(open(args["config"], "r"))
+    SERVER_CONFIG = CONFIG_FILE["server"]
+    CLIENT_CONFIG = CONFIG_FILE["client"]
+    STORE_CONFIG = CONFIG_FILE["store"]
+
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=int(SERVER_CONFIG["maxWorkers"])))
+    GateKV_storage_pb2_grpc.add_GateKV_StorageServicer_to_server(GateKV_StorageNode_Server(CLIENT_CONFIG, STORE_CONFIG), server)
+    server.add_insecure_port(f'[::]:{SERVER_CONFIG["port"]}')
     server.start()
-    print("Storage Server running on port 50052")
+    print(f"Storage Server running on port {SERVER_CONFIG['port']}")
     server.wait_for_termination()
 
 if __name__ == "__main__":

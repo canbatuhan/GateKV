@@ -2,7 +2,7 @@ echo "---------------------------------"
 echo "-- Code generator for protobuf --"
 echo "---------------------------------"
 
-RUNNER=python
+RUNNER=python3
 FLAGS=-m
 PROGRAM=grpc_tools.protoc
 

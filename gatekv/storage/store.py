@@ -1,9 +1,8 @@
 import pickledb
 
 class GateKV_StorageNode_LocalStore:
-    def __init__(self, local_store_conf:dict):
-        self.__config = local_store_conf
-        self.__store = pickledb.PickleDB("storage.db")
+    def __init__(self, conf:dict):
+        self.__store = pickledb.PickleDB(conf["path"])
 
     def set(self, key, value):
         entry = self.__store.get(key) # Entry is (value, version)

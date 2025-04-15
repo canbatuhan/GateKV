@@ -1,0 +1,19 @@
+server:
+  maxWorkers: 10
+  port: 50059
+
+client:
+  gateway:
+    host: "localhost"
+    port: 50051
+
+  storageNodes:
+    - host: "localhost"
+      port: 50058
+      alias: "storage-01"
+    - host: "localhost"
+      port: 50053
+      alias: "storage-02"
+
+store:
+  path: "storage.db"
