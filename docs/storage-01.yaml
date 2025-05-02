@@ -1,6 +1,6 @@
 server:
   maxWorkers: 10
-  port: 50060
+  port: 50059
 
 client:
   gateway:
@@ -9,7 +9,7 @@ client:
 
   storageNodes:
     - host: "localhost"
-      port: 50059
+      port: 50060
       alias: "storage-01"
 
 store:

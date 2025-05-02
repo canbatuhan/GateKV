@@ -27,7 +27,6 @@ message RegisterResponse {
 message SetRequest {
     string key = 1;
     string value = 2;
-    UserInformation userInfo = 3;
 }
 
 message SetResponse {
@@ -36,7 +35,6 @@ message SetResponse {
 
 message GetRequest {
     string key = 1;
-    UserInformation userInfo = 2;
 }
 
 message GetResponse {
@@ -46,7 +44,6 @@ message GetResponse {
 
 message RemRequest {
     string key = 1;
-    UserInformation userInfo = 2;
 }
 
 message RemResponse {
@@ -60,8 +57,4 @@ message Empty {
 message Address {
     string host = 1;
     uint32 port = 2;
-}
-
-message UserInformation {
-    string ip = 1;
 }

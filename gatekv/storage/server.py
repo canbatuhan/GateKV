@@ -14,42 +14,43 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
                                                    {item['alias']: f"{item['host']}:{item['port']}" for item in client_conf["storageNodes"]})
         self.__storage = GateKV_StorageNode_LocalStore(store_config)
 
-    def Register(self, request, context: grpc.ServicerContext):
+    def Register(self, request):
         return GateKV_storage_pb2.RegisterResponse(alias=request.alias)
     
-    def Set(self, request, context: grpc.ServicerContext):
-        self.__client.callSetOnGateway(request.key, request.value, context.peer())
-        return GateKV_storage_pb2.Empty() 
+    def Set(self, request, context):
+        gateway_response = self.__client.callSetOnGateway(request.key, request.value)
+        return GateKV_storage_pb2.SetResponse(success=gateway_response)
     
-    def SetData(self, request, alias):
+    def SetData(self, request, context):
         self.__storage.set(request.key, request.value)
         return GateKV_storage_pb2.SetResponse(success=True)
     
-    def Get(self, request, context: grpc.ServicerContext):
+    def Get(self, request, context):
         value = self.__storage.get(request.key)
         print(value)
-        if value != None:
-            return GateKV_storage_pb2.GetResponse(success=True, value=value[0])
-        else: 
-            print("Key value does not exist")
-            return self.__client.callGetOnStorage(request.key, context.peer())
+        if value == None:
+            resp = self.__client.callGetOnStorage(request.key)
+            return GateKV_storage_pb2.GetResponse(success=resp.success, value=resp.value)
+            
+        return GateKV_storage_pb2.GetResponse(success=True, value=value[0])
     
-    def GetData(self, request, alias):
+
+    def GetData(self, request, context):
         value = self.__storage.get(request.key)
-        if value != None:
-            return GateKV_storage_pb2.GetResponse(success=True, value=value[0])
-        return GateKV_storage_pb2.GetResponse(success=False, value=None)
+        if value == None:
+            return GateKV_storage_pb2.GetResponse(success=False, value=None)
+        return GateKV_storage_pb2.GetResponse(success=True, value=value[0])
     
-    def Rem(self, request, context: grpc.ServicerContext):
-        self.__client.callRemOnGateway(request.key, context.peer())
-        return GateKV_storage_pb2.Empty() 
+    def Rem(self, request, context):
+        gateway_response = self.__client.callRemOnGateway(request.key)
+        return GateKV_storage_pb2.RemResponse(success=gateway_response)
     
-    def RemData(self, request, alias):
+    def RemData(self, request, context):
         value = self.__storage.get(request.key)
-        if value != None:
-            self.__storage.rem(request.key)
-            return GateKV_storage_pb2.RemResponse(success=True)
-        return GateKV_storage_pb2.RemResponse(success=False)
+        if value == None:
+            return GateKV_storage_pb2.RemResponse(success=False)
+        self.__storage.rem(request.key)
+        return GateKV_storage_pb2.RemResponse(success=True)
 
 def serve():
     parser = argparse.ArgumentParser()
