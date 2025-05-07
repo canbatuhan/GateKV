@@ -1,6 +1,6 @@
 server:
   maxWorkers: 10
-  port: 50060
+  port: 50058
 
 client:
   gateway:

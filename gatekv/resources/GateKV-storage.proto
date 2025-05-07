@@ -35,11 +35,13 @@ message SetResponse {
 
 message GetRequest {
     string key = 1;
+    repeated string visitedNodes = 2;
 }
 
 message GetResponse {
     bool success = 1;
     optional string value = 2;
+    repeated string visitedNodes = 3;
 }
 
 message RemRequest {
