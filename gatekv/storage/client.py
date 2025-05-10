@@ -21,7 +21,7 @@ class GateKV_StorageNode_Client:
             self.__storage_stubs[alias] = GateKV_storage_pb2_grpc.GateKV_StorageStub(channel)
             
     # Gateway Calls
-    def callSetOnGateway(self, key, value, alias):
+    def callSetOnGateway(self, key, value):
         # request = GateKV_gateway_pb2.SetRequest(key=key, value=value, alias=alias)
         # response = self.__gateway_stub.Set(request)
         # return response.success
@@ -32,13 +32,13 @@ class GateKV_StorageNode_Client:
         return True
 
     # not important function
-    def callGetOnGateway(self, key, alias):
+    def callGetOnGateway(self, key):
         # request = GateKV_gateway_pb2.GetRequest(key=key)
         # response = self.__gateway_stub.Get(request)
         # return response.success, response.value
         return True
 
-    def callRemOnGateway(self, key, alias):
+    def callRemOnGateway(self, key):
         # request = GateKV_gateway_pb2.RemRequest(key=key)  # Correct message name
         # response = self.__gateway_stub.Rem(request)  # Adjusted method name
         # print(f"Rem Response: {response.success}")
@@ -50,22 +50,29 @@ class GateKV_StorageNode_Client:
     def callSetOnStorage(self, key, value):
         pass
 
-    def callGetOnStorage(self, key, alias):
-        """if alias not in self.__storage_stubs:
-            print(f"Error: Storage node {alias} not found!")
-            return False, ""
-        request = GateKV_storage_pb2.GetRequest(key=key)
-        response = self.__storage_stubs[alias].Get(request)
-        print(f"GetData Response from {alias}: {response.success}, Value: {response.value}")"""
-        # Select a random neighbour
-        stubs:list[GateKV_storage_pb2_grpc.GateKV_StorageStub] = list(self.__storage_stubs.values())
-        stub = random.choice(stubs)
+    def callGetOnStorage(self, key, visited_nodes):
+        print(f"[Client] Visiting nodes (excluding): {visited_nodes}")
+        available_stubs = [(alias, stub) for alias, stub in self.__storage_stubs.items() if alias not in visited_nodes]
 
-        response = stub.Get(GateKV_storage_pb2.GetRequest(key=key))
+        for alias, stub in available_stubs:
+            print(f"Querying node '{alias}' for key '{key}'...")
+            new_visited = set(visited_nodes)
+            new_visited.add(alias)
 
-        return response
+            request = GateKV_storage_pb2.GetRequest(
+                key=key,
+                visitedNodes=list(new_visited)
+            )
+            response = stub.Get(request)
 
-    def callRemOnStorage(self, alias, key):
+            if response.success:
+                print(f"Key '{key}' found in node '{alias}' with value '{response.value}'.")
+                return response
+
+        print(f"Key '{key}' not found in any reachable node.")
+        return GateKV_storage_pb2.GetResponse(success=False, value="", visitedNodes=list(visited_nodes))
+
+    def callRemOnStorage(self, key):
         pass
 
 if __name__ == "__main__":
