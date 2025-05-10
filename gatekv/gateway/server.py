@@ -1,5 +1,5 @@
 from gatekv.gateway.client import GateKV_GatewayNode_Client
-from gatekv.gateway.maps import GateKV_GatewayNode_PairOwnerMap, GateKV_GatewayNode_StateMachineMap
+from gatekv.gateway.util import GateKV_GatewayNode_PairVersionMap, GateKV_GatewayNode_StateMachineMap
 from gatekv.gateway.service import GateKV_gateway_pb2
 from gatekv.gateway.service.GateKV_gateway_pb2_grpc import GateKV_GatewayServicer
 from gatekv.gateway.statemachine import GateKV_GatewayNode_Events
@@ -11,35 +11,47 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
 
         self.__client = GateKV_GatewayNode_Client(client_conf)
         self.__machine_map = GateKV_GatewayNode_StateMachineMap()
-        self.__owner_map = GateKV_GatewayNode_PairOwnerMap()
+        self.__version_map = GateKV_GatewayNode_PairVersionMap()
+        self.__gossip_batch = GateKV_gateway_pb2.GossipMessage()
 
-    async def Register(self, request, context):
+    def Register(self, request, context):
         return super().Register(request, context)
 
-    async def Set(self, request, context):
+    def Set(self, request, context):
+        success = False
+
         try:
             machine = self.__machine_map.getStateMachine(request.key)
             machine.send_event(GateKV_GatewayNode_Events.WRITE)
+            success = self.__client.set_protocol(request.key, request.value)
 
-            current_owners = self.__owner_map.getPairOwners(request.key)
-            new_owners, success = self.__client.set_protocol(current_owners, request.key, request.value)
-            if success and current_owners == None:
-                self.__owner_map.addPairOwners(request.key, new_owners)
+            if success:
+                gossip_data = GateKV_gateway_pb2.GossipData(...)
+                self.__gossip_batch.sets.extend([])
+                pass
 
-            machine.send_event(GateKV_GatewayNode_Events.DONE)
-            return GateKV_gateway_pb2.SetResponse(success = success)
-        
+            else:
+                self.__machine_map.removeStateMachine(request.key)
+                # Roll-back
+                pass
+
         except Exception as e:
             print(e.with_traceback(None))
-            return GateKV_gateway_pb2.SetReponse(success = False)        
+
+        machine.send_event(GateKV_GatewayNode_Events.DONE)
+        return GateKV_gateway_pb2.SetResponse(success = success)       
     
-    async def Get(self, request, context):
+    def Get(self, request, context):
+        success = False
+        value = None
+
         try:
             machine = self.__machine_map.getStateMachine(request.key)
             machine.send_event(GateKV_GatewayNode_Events.READ)
-
-            current_owners = self.__owner_map.getPairOwners(request.key)
-            success, value = self.__client.get_protocol(current_owners, request.key)
+            success, value = self.__client.get_protocol(request.key)
+            
+            if not success:
+                self.__machine_map.removeStateMachine(request.key)
 
         except Exception as e:
             print(e.with_traceback(None))
@@ -47,20 +59,39 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
         machine.send_event(GateKV_GatewayNode_Events.DONE)
         return GateKV_gateway_pb2.GetResponse(success=success, value=value)
     
-    async def Rem(self, request, context):
+    def Rem(self, request, context):
+        success = False
+
         try:
             machine = self.__machine_map.getStateMachine(request.key)
             machine.send_event(GateKV_GatewayNode_Events.WRITE)
+            success = self.__client.rem_protocol(request.key)
 
-            current_owners = self.__owner_map.getPairOwners(request.key)
-            _, success = self.__client.rem_protocol(current_owners, request.key)
-            if current_owners != None:
-                self.__owner_map.removePairOwners(request.key, current_owners)
+            if success:
                 self.__machine_map.removeStateMachine(request.key)
+                # Add to gossip map
 
-            machine.send_event(GateKV_GatewayNode_Events.DONE)
-            return GateKV_gateway_pb2.RemResponse(success = success)
+            else:
+                # Roll-back
+                pass
         
         except Exception as e:
             print(e.with_traceback(None))
-            return GateKV_gateway_pb2.RemResponse(success = False) 
+        
+        machine.send_event(GateKV_GatewayNode_Events.DONE)
+        return GateKV_gateway_pb2.RemResponse(success = success)
+        
+    def Gossip(self, request, context):
+        success = False
+
+        try:
+            # Set Phase
+            set_data = request.sets
+            
+
+            # Remove Phase
+
+        except Exception as e:
+            print(e.with_traceback(None))
+        
+        return GateKV_gateway_pb2.GossipAck(success = False)

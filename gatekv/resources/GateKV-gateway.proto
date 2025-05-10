@@ -8,17 +8,18 @@ service GateKV_Gateway {
     rpc Set (SetRequest) returns (SetResponse) {} // from user to gateway
     rpc Get (GetRequest) returns (GetResponse) {} // from user to gateway
     rpc Rem (RemRequest) returns (RemResponse) {} // from user to gateway
-    // SetBroadcast, RemBroadcast
+    
+    rpc Gossip (GossipMessage) returns (GossipAck) {} // from gateway to gateway
 }
 
 message RegisterRequest {
-    string alias = 1; // storage-00
-    string type = 2; // gateway or storage
+    string alias = 1;
+    string type = 2;
     Address sender = 3;
 }
 
 message RegisterResponse {
-    string alias = 1; // gateway-00
+    string alias = 1;
 }
 
 message SetRequest {
@@ -50,7 +51,22 @@ message RemResponse {
     bool success = 1;
 }
 
+message GossipMessage {
+    repeated GossipData sets = 1;
+    repeated GossipData rems = 2;
+}
+
+message GossipAck {
+    bool success = 1;
+}
+
 message Address {
     string host = 1;
     uint32 port = 2;
+}
+
+message GossipData {
+    string key = 1;
+    string value = 2;
+    uint64 version = 3;
 }
