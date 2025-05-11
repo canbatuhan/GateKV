@@ -3,13 +3,13 @@ import json
 import time
 import smpai
 
-STATEMACHINE_CONFIG = json.load(open("./gatekv/resources/statemachine.json"))
+STATEMACHINE_CONFIG = "./gatekv/resources/statemachine.json"
 
 class GateKV_GatewayNode_Events(Enum):
+    START = "START"
     READ  = "READ"
     WRITE = "WRITE"
     DONE  = "DONE"
-    EMPTY = "EMPTY"
 
 class GateKV_GatewayNode_States(Enum):
     IDLE = "IDLE"
@@ -23,6 +23,8 @@ class GateKV_GatewayNode_ReplicatedStateMachine:
     def __init__(self, state_machine_conf:dict):
         self.__config = state_machine_conf
         self.__machine = smpai.fsm.FiniteStateMachine(STATEMACHINE_CONFIG)
+        self.__machine.start()
+        self.__machine.send_event(GateKV_GatewayNode_Events.START.name)
         self.__stack = list()
 
     def send_event(self, event:GateKV_GatewayNode_Events):

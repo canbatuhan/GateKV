@@ -25,7 +25,6 @@ message RegisterResponse {
 message SetRequest {
     string key = 1;
     string value = 2;
-    Address user_info = 3;
 }
 
 message SetResponse {
@@ -34,7 +33,6 @@ message SetResponse {
 
 message GetRequest {
     string key = 1;
-    Address user_info = 3;
 }
 
 message GetResponse {
@@ -44,7 +42,6 @@ message GetResponse {
 
 message RemRequest {
     string key = 1;
-    Address user_info = 3;
 }
 
 message RemResponse {

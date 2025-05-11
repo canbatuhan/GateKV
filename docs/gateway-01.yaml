@@ -1,0 +1,23 @@
+server:
+  alias: Gateway-01
+  host: 127.0.0.1
+  port: 9010 # Gateway-01
+  workers: 5
+  gossip: 10 # 10 seconds
+
+client:
+  gateway:
+    - host: 127.0.0.1
+      port: 9000 # Gateway-00
+    - host: 127.0.0.1
+      port: 9020 # Gateway-02
+      
+  storage:
+    - host: 127.0.0.1
+      port: 8020 # Storage-02
+    - host: 127.0.0.1
+      port: 8030 # Storage-03
+
+statemachine:
+  min_timeout: 0.000000052 # 52 nanoseconds
+  max_timeout: 0.010       # 10 milliseconds

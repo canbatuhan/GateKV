@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14GateKV-gateway.proto\x12\x0egatekv_gateway\"W\n\x0fRegisterRequest\x12\r\n\x05\x61lias\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\'\n\x06sender\x18\x03 \x01(\x0b\x32\x17.gatekv_gateway.Address\"!\n\x10RegisterResponse\x12\r\n\x05\x61lias\x18\x01 \x01(\t\"T\n\nSetRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\x12*\n\tuser_info\x18\x03 \x01(\x0b\x32\x17.gatekv_gateway.Address\"\x1e\n\x0bSetResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"E\n\nGetRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12*\n\tuser_info\x18\x03 \x01(\x0b\x32\x17.gatekv_gateway.Address\"-\n\x0bGetResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\r\n\x05value\x18\x02 \x01(\t\"E\n\nRemRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12*\n\tuser_info\x18\x03 \x01(\x0b\x32\x17.gatekv_gateway.Address\"\x1e\n\x0bRemResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"c\n\rGossipMessage\x12(\n\x04sets\x18\x01 \x03(\x0b\x32\x1a.gatekv_gateway.GossipData\x12(\n\x04rems\x18\x02 \x03(\x0b\x32\x1a.gatekv_gateway.GossipData\"\x1c\n\tGossipAck\x12\x0f\n\x07success\x18\x01 \x01(\x08\"%\n\x07\x41\x64\x64ress\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\r\"9\n\nGossipData\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\x12\x0f\n\x07version\x18\x03 \x01(\x04\x32\xed\x02\n\x0eGateKV_Gateway\x12O\n\x08Register\x12\x1f.gatekv_gateway.RegisterRequest\x1a .gatekv_gateway.RegisterResponse\"\x00\x12@\n\x03Set\x12\x1a.gatekv_gateway.SetRequest\x1a\x1b.gatekv_gateway.SetResponse\"\x00\x12@\n\x03Get\x12\x1a.gatekv_gateway.GetRequest\x1a\x1b.gatekv_gateway.GetResponse\"\x00\x12@\n\x03Rem\x12\x1a.gatekv_gateway.RemRequest\x1a\x1b.gatekv_gateway.RemResponse\"\x00\x12\x44\n\x06Gossip\x12\x1d.gatekv_gateway.GossipMessage\x1a\x19.gatekv_gateway.GossipAck\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14GateKV-gateway.proto\x12\x0egatekv_gateway\"W\n\x0fRegisterRequest\x12\r\n\x05\x61lias\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\'\n\x06sender\x18\x03 \x01(\x0b\x32\x17.gatekv_gateway.Address\"!\n\x10RegisterResponse\x12\r\n\x05\x61lias\x18\x01 \x01(\t\"(\n\nSetRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"\x1e\n\x0bSetResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"\x19\n\nGetRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\"-\n\x0bGetResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\r\n\x05value\x18\x02 \x01(\t\"\x19\n\nRemRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x1e\n\x0bRemResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"c\n\rGossipMessage\x12(\n\x04sets\x18\x01 \x03(\x0b\x32\x1a.gatekv_gateway.GossipData\x12(\n\x04rems\x18\x02 \x03(\x0b\x32\x1a.gatekv_gateway.GossipData\"\x1c\n\tGossipAck\x12\x0f\n\x07success\x18\x01 \x01(\x08\"%\n\x07\x41\x64\x64ress\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\r\"9\n\nGossipData\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\x12\x0f\n\x07version\x18\x03 \x01(\x04\x32\xed\x02\n\x0eGateKV_Gateway\x12O\n\x08Register\x12\x1f.gatekv_gateway.RegisterRequest\x1a .gatekv_gateway.RegisterResponse\"\x00\x12@\n\x03Set\x12\x1a.gatekv_gateway.SetRequest\x1a\x1b.gatekv_gateway.SetResponse\"\x00\x12@\n\x03Get\x12\x1a.gatekv_gateway.GetRequest\x1a\x1b.gatekv_gateway.GetResponse\"\x00\x12@\n\x03Rem\x12\x1a.gatekv_gateway.RemRequest\x1a\x1b.gatekv_gateway.RemResponse\"\x00\x12\x44\n\x06Gossip\x12\x1d.gatekv_gateway.GossipMessage\x1a\x19.gatekv_gateway.GossipAck\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,25 +36,25 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_REGISTERRESPONSE']._serialized_start=129
   _globals['_REGISTERRESPONSE']._serialized_end=162
   _globals['_SETREQUEST']._serialized_start=164
-  _globals['_SETREQUEST']._serialized_end=248
-  _globals['_SETRESPONSE']._serialized_start=250
-  _globals['_SETRESPONSE']._serialized_end=280
-  _globals['_GETREQUEST']._serialized_start=282
-  _globals['_GETREQUEST']._serialized_end=351
-  _globals['_GETRESPONSE']._serialized_start=353
-  _globals['_GETRESPONSE']._serialized_end=398
-  _globals['_REMREQUEST']._serialized_start=400
-  _globals['_REMREQUEST']._serialized_end=469
-  _globals['_REMRESPONSE']._serialized_start=471
-  _globals['_REMRESPONSE']._serialized_end=501
-  _globals['_GOSSIPMESSAGE']._serialized_start=503
-  _globals['_GOSSIPMESSAGE']._serialized_end=602
-  _globals['_GOSSIPACK']._serialized_start=604
-  _globals['_GOSSIPACK']._serialized_end=632
-  _globals['_ADDRESS']._serialized_start=634
-  _globals['_ADDRESS']._serialized_end=671
-  _globals['_GOSSIPDATA']._serialized_start=673
-  _globals['_GOSSIPDATA']._serialized_end=730
-  _globals['_GATEKV_GATEWAY']._serialized_start=733
-  _globals['_GATEKV_GATEWAY']._serialized_end=1098
+  _globals['_SETREQUEST']._serialized_end=204
+  _globals['_SETRESPONSE']._serialized_start=206
+  _globals['_SETRESPONSE']._serialized_end=236
+  _globals['_GETREQUEST']._serialized_start=238
+  _globals['_GETREQUEST']._serialized_end=263
+  _globals['_GETRESPONSE']._serialized_start=265
+  _globals['_GETRESPONSE']._serialized_end=310
+  _globals['_REMREQUEST']._serialized_start=312
+  _globals['_REMREQUEST']._serialized_end=337
+  _globals['_REMRESPONSE']._serialized_start=339
+  _globals['_REMRESPONSE']._serialized_end=369
+  _globals['_GOSSIPMESSAGE']._serialized_start=371
+  _globals['_GOSSIPMESSAGE']._serialized_end=470
+  _globals['_GOSSIPACK']._serialized_start=472
+  _globals['_GOSSIPACK']._serialized_end=500
+  _globals['_ADDRESS']._serialized_start=502
+  _globals['_ADDRESS']._serialized_end=539
+  _globals['_GOSSIPDATA']._serialized_start=541
+  _globals['_GOSSIPDATA']._serialized_end=598
+  _globals['_GATEKV_GATEWAY']._serialized_start=601
+  _globals['_GATEKV_GATEWAY']._serialized_end=966
 # @@protoc_insertion_point(module_scope)
