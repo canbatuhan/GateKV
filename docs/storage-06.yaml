@@ -1,0 +1,20 @@
+  alias: Storage-06
+  host: 127.0.0.1
+  port: 8050 # Storage-06
+  workers: 5
+  gossip: 10 # 10 seconds
+
+client:
+  gateway:
+    host: 127.0.0.1
+    port: 9020 # Gateway-02
+      
+  storage:
+    - host: 127.0.0.1
+      port: 8040 # Storage-04
+    - host: 127.0.0.1
+      port: 8050 # Storage-05
+
+store:
+  path: "storage-06.db"
+  dump: 10 # 10 seconds

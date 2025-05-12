@@ -1,24 +1,32 @@
+from concurrent.futures import ThreadPoolExecutor
 import grpc
-from concurrent import futures
+
 from gatekv.storage.client import GateKV_StorageNode_Client
 from gatekv.storage.service import GateKV_storage_pb2, GateKV_storage_pb2_grpc
 from gatekv.gateway.service import GateKV_gateway_pb2, GateKV_gateway_pb2_grpc
 from gatekv.storage.store import GateKV_StorageNode_LocalStore
-import yaml
-import argparse
 
 class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
-    def __init__(self, client_conf:dict, store_config:dict, node_alias: str):
+    def __init__(self, server_conf:dict, client_conf:dict, store_conf:dict):
         super().__init__()
-        self.node_alias = node_alias 
-        print(f"[INIT] Node alias is: {self.node_alias}") 
-        self.__client  = GateKV_StorageNode_Client(f"{client_conf['gateway']['host']}:{client_conf['gateway']['port']}",
-                                                   {item['alias']: f"{item['host']}:{item['port']}" for item in client_conf["storageNodes"]})
-        self.__storage = GateKV_StorageNode_LocalStore(store_config)
+        self.__config = server_conf
+        self.__server = grpc.server(thread_pool=ThreadPoolExecutor(max_workers=self.__config.get("workers")))
+        GateKV_gateway_pb2_grpc.add_GateKV_GatewayServicer_to_server(self, self.__server)
+        self.__server.add_insecure_port("0.0.0.0:{}".format(self.__config.get("port")))
+        
+        self.__client = GateKV_StorageNode_Client(client_conf)
+        self.__storage = GateKV_StorageNode_LocalStore(store_conf)
 
+    def Register(self, request, context):
+        try:
+            self.__client.register_neighbour(request.type,
+                                             request.alias,
+                                             request.sender.host,
+                                             request.sender.port)
+        except Exception as e:
+            print(e.with_traceback(None))
 
-    def Register(self, request):
-        return GateKV_storage_pb2.RegisterResponse(alias=request.alias)
+        return GateKV_storage_pb2.RegisterResponse(alias = self.__config.get("alias"))
     
     def Set(self, request, context):
         gateway_response = self.__client.callSetOnGateway(request.key, request.value)
@@ -74,24 +82,20 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
         for item in request.items:
             success = success and self.__storage.rem(item.key)
         return GateKV_storage_pb2.BatchRemResponse(success=True)
+    
+    def __start_server(self):
+        self.__server.start()
 
-def serve():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-config", default="docs/storage-00.yaml", type=str)
-    parser.add_argument("-alias", required=True, type=str)
+    def __register(self):
+        self.__client.register_protocol("storage",
+                                        self.__config.get("alias"),
+                                        self.__config.get("host"),
+                                        self.__config.get("port"))
 
-    args = vars(parser.parse_args())
-    CONFIG_FILE = yaml.safe_load(open(args["config"], "r"))
-    SERVER_CONFIG = CONFIG_FILE["server"]
-    CLIENT_CONFIG = CONFIG_FILE["client"]
-    STORE_CONFIG = CONFIG_FILE["store"]
+    def __infinite_loop(self):
+        self.__server.wait_for_termination()
 
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=int(SERVER_CONFIG["maxWorkers"])))
-    GateKV_storage_pb2_grpc.add_GateKV_StorageServicer_to_server(GateKV_StorageNode_Server(CLIENT_CONFIG, STORE_CONFIG, args["alias"]), server)
-    server.add_insecure_port(f'[::]:{SERVER_CONFIG["port"]}')
-    server.start()
-    print(f"Storage Server running on port {SERVER_CONFIG['port']}")
-    server.wait_for_termination()
-
-if __name__ == "__main__":
-    serve()
+    def start(self):
+        self.__start_server()
+        self.__register()
+        self.__infinite_loop()

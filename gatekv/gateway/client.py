@@ -78,7 +78,7 @@ class GateKV_GatewayNode_Client:
     
     # Util Methods
 
-    def registerNeighbour(self, type, alias, host, port):
+    def register_neighbour(self, type, alias, host, port):
         channel = grpc.insecure_channel("{}:{}".format(host, port))
         if type == "gateway":
             stub = GateKV_GatewayStub(channel)

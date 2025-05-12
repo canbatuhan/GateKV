@@ -29,10 +29,10 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
 
     def Register(self, request, context):
         try:
-            self.__client.registerNeighbour(request.type,
-                                            request.alias,
-                                            request.sender.host,
-                                            request.sender.port)
+            self.__client.register_neighbour(request.type,
+                                             request.alias,
+                                             request.sender.host,
+                                             request.sender.port)
         except Exception as e:
             self.__logger.log(e.with_traceback(None))
 

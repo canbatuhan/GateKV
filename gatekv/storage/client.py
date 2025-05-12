@@ -11,16 +11,54 @@ from gatekv.storage.service import GateKV_storage_pb2
 from gatekv.storage.service import GateKV_storage_pb2_grpc
 
 class GateKV_StorageNode_Client:
-    def __init__(self, gateway_address, storage_addresses: Dict[str, str]):
-        # Connect to Gateway
-        # self.gateway_channel = grpc.insecure_channel(gateway_address)
-        # self.__gateway_stub = GateKV_GatewayStub(self.gateway_channel)
+    def __init__(self, client_conf:dict):
+        self.__config = client_conf
+        self.__gateway_stub:GateKV_GatewayStub = None # stubs["gateway-01"].Set(...)
+        self.__storage_stubs:Dict[str:GateKV_StorageStub] = dict() # stubs["storage-01"].Set(...)
         
-        # Connect to multiple Storage Nodes
-        self.__storage_stubs = {}
-        for alias, address in storage_addresses.items():
-            channel = grpc.insecure_channel(address)
-            self.__storage_stubs[alias] = GateKV_storage_pb2_grpc.GateKV_StorageStub(channel)
+    # Util Methods
+
+    def register_neighbour(self, type, alias, host, port):
+        channel = grpc.insecure_channel("{}:{}".format(host, port))
+        if type == "gateway":
+            stub = GateKV_GatewayStub(channel)
+            self.__gateway_stub = stub
+        elif type == "storage":
+            stub = GateKV_StorageStub(channel)
+            self.__storage_stubs.update({alias : stub})
+
+    def register_protocol(self, type, alias, host, port):
+        gateway = self.__config.get("gateway")
+        try:
+            stub = GateKV_GatewayStub(grpc.insecure_channel("{}:{}".format(
+                gateway.get("host"), gateway.get("port"))))
+            request = GateKV_gateway_pb2.RegisterRequest(
+                type = type,
+                alias = alias,
+                sender = GateKV_gateway_pb2.Address(
+                    host = host,
+                    port = port))
+            response = stub.Register(request)
+            self.__gateway_stub = stub
+
+        except Exception as e:
+            print(e.with_traceback(None))
+        
+        for storage in self.__config.get("storage"):
+            try:
+                stub = GateKV_GatewayStub(grpc.insecure_channel("{}:{}".format(
+                    storage.get("host"), storage.get("port"))))
+                request = GateKV_storage_pb2.RegisterRequest(
+                    type = "gateway",
+                    alias = alias,
+                    sender = GateKV_storage_pb2.Address(
+                        host = host,
+                        port = port))
+                response = stub.Register(request)
+                self.__storage_stubs.update({response.alias : stub})
+
+            except Exception as e:
+                print(e.with_traceback(None))
             
     # Gateway Calls
     def callSetOnGateway(self, key, value):
@@ -104,8 +142,3 @@ class GateKV_StorageNode_Client:
 
     def callRemOnStorage(self, key):
         pass
-
-if __name__ == "__main__":
-    gateway_address = "localhost:50051"
-    storage_addresses = {"storage-01": "localhost:50052", "storage-02": "localhost:50053"}
-    
