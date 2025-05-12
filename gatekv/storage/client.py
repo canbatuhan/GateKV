@@ -1,7 +1,9 @@
+from queue import Queue
 import random
+import threading
 import grpc
 import time
-from typing import Dict 
+from typing import Dict, List 
 from gatekv.gateway.service.GateKV_gateway_pb2_grpc import GateKV_GatewayStub
 from gatekv.gateway.service import GateKV_gateway_pb2
 from gatekv.storage.service.GateKV_storage_pb2_grpc import GateKV_StorageStub
@@ -51,25 +53,53 @@ class GateKV_StorageNode_Client:
         pass
 
     def callGetOnStorage(self, key, visited_nodes):
-        print(f"[Client] Visiting nodes (excluding): {visited_nodes}")
-        available_stubs = [(alias, stub) for alias, stub in self.__storage_stubs.items() if alias not in visited_nodes]
+        visited_nodes = set(visited_nodes)
+        result = {'response': None}
+        lock = threading.Lock()
+        stop_event = threading.Event()
+        q = Queue()
 
-        for alias, stub in available_stubs:
-            print(f"Querying node '{alias}' for key '{key}'...")
-            new_visited = set(visited_nodes)
-            new_visited.add(alias)
+        for alias, stub in self.__storage_stubs.items():
+            if alias not in visited_nodes:
+                q.put((alias, stub))
 
-            request = GateKV_storage_pb2.GetRequest(
-                key=key,
-                visitedNodes=list(new_visited)
-            )
-            response = stub.Get(request)
+        def worker():
+            while not q.empty() and not stop_event.is_set():
+                alias, stub = q.get()
+                with lock:
+                    if alias in visited_nodes:
+                        return
+                    visited_nodes.add(alias)
+                new_visited = set(visited_nodes)
 
-            if response.success:
-                print(f"Key '{key}' found in node '{alias}' with value '{response.value}'.")
-                return response
+                print(f"visiting: {alias}, current visited: {new_visited}")
 
-        print(f"Key '{key}' not found in any reachable node.")
+                request = GateKV_storage_pb2.GetRequest(
+                    key=key,
+                    visitedNodes=list(new_visited)
+                )
+                try:
+                    response = stub.Get(request)
+                    if response.success:
+                        with lock:
+                            if result['response'] is None:
+                                result['response'] = response
+                                stop_event.set()
+                except Exception as e:
+                    print(f"[Client] Error querying node '{alias}': {e}")
+
+        threads: List[threading.Thread] = []
+        for _ in range(min(5, q.qsize())):
+            t = threading.Thread(target=worker)
+            threads.append(t)
+            t.start()
+
+        for t in threads:
+            t.join(timeout=2)
+
+        if result['response']:
+            return result['response']
+
         return GateKV_storage_pb2.GetResponse(success=False, value="", visitedNodes=list(visited_nodes))
 
     def callRemOnStorage(self, key):

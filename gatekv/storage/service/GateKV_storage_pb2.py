@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14GateKV-storage.proto\x12\x0egatekv_storage\"W\n\x0fRegisterRequest\x12\r\n\x05\x61lias\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\'\n\x06sender\x18\x03 \x01(\x0b\x32\x17.gatekv_storage.Address\"!\n\x10RegisterResponse\x12\r\n\x05\x61lias\x18\x01 \x01(\t\"(\n\nSetRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"\x1e\n\x0bSetResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"/\n\nGetRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x14\n\x0cvisitedNodes\x18\x02 \x03(\t\"R\n\x0bGetResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x12\n\x05value\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x14\n\x0cvisitedNodes\x18\x03 \x03(\tB\x08\n\x06_value\"\x19\n\nRemRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x1e\n\x0bRemResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"\x07\n\x05\x45mpty\"%\n\x07\x41\x64\x64ress\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\r2\xed\x03\n\x0eGateKV_Storage\x12O\n\x08Register\x12\x1f.gatekv_storage.RegisterRequest\x1a .gatekv_storage.RegisterResponse\"\x00\x12:\n\x03Set\x12\x1a.gatekv_storage.SetRequest\x1a\x15.gatekv_storage.Empty\"\x00\x12@\n\x03Get\x12\x1a.gatekv_storage.GetRequest\x1a\x1b.gatekv_storage.GetResponse\"\x00\x12:\n\x03Rem\x12\x1a.gatekv_storage.RemRequest\x1a\x15.gatekv_storage.Empty\"\x00\x12\x44\n\x07SetData\x12\x1a.gatekv_storage.SetRequest\x1a\x1b.gatekv_storage.SetResponse\"\x00\x12\x44\n\x07GetData\x12\x1a.gatekv_storage.GetRequest\x1a\x1b.gatekv_storage.GetResponse\"\x00\x12\x44\n\x07RemData\x12\x1a.gatekv_storage.RemRequest\x1a\x1b.gatekv_storage.RemResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14GateKV-storage.proto\x12\x0egatekv_storage\"W\n\x0fRegisterRequest\x12\r\n\x05\x61lias\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\'\n\x06sender\x18\x03 \x01(\x0b\x32\x17.gatekv_storage.Address\"!\n\x10RegisterResponse\x12\r\n\x05\x61lias\x18\x01 \x01(\t\"(\n\nSetRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"\x1e\n\x0bSetResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"/\n\nGetRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x14\n\x0cvisitedNodes\x18\x02 \x03(\t\"R\n\x0bGetResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x12\n\x05value\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x14\n\x0cvisitedNodes\x18\x03 \x03(\tB\x08\n\x06_value\"\x19\n\nRemRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x1e\n\x0bRemResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"<\n\x0f\x42\x61tchSetRequest\x12)\n\x05pairs\x18\x01 \x03(\x0b\x32\x1a.gatekv_storage.SetRequest\"<\n\x0f\x42\x61tchRemRequest\x12)\n\x05pairs\x18\x01 \x03(\x0b\x32\x1a.gatekv_storage.RemRequest\"#\n\x10\x42\x61tchSetResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"#\n\x10\x42\x61tchRemResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"\x07\n\x05\x45mpty\"%\n\x07\x41\x64\x64ress\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\r2\x8f\x05\n\x0eGateKV_Storage\x12O\n\x08Register\x12\x1f.gatekv_storage.RegisterRequest\x1a .gatekv_storage.RegisterResponse\"\x00\x12:\n\x03Set\x12\x1a.gatekv_storage.SetRequest\x1a\x15.gatekv_storage.Empty\"\x00\x12@\n\x03Get\x12\x1a.gatekv_storage.GetRequest\x1a\x1b.gatekv_storage.GetResponse\"\x00\x12:\n\x03Rem\x12\x1a.gatekv_storage.RemRequest\x1a\x15.gatekv_storage.Empty\"\x00\x12\x44\n\x07SetData\x12\x1a.gatekv_storage.SetRequest\x1a\x1b.gatekv_storage.SetResponse\"\x00\x12\x44\n\x07GetData\x12\x1a.gatekv_storage.GetRequest\x1a\x1b.gatekv_storage.GetResponse\"\x00\x12\x44\n\x07RemData\x12\x1a.gatekv_storage.RemRequest\x1a\x1b.gatekv_storage.RemResponse\"\x00\x12O\n\x08\x42\x61tchSet\x12\x1f.gatekv_storage.BatchSetRequest\x1a .gatekv_storage.BatchSetResponse\"\x00\x12O\n\x08\x42\x61tchRem\x12\x1f.gatekv_storage.BatchRemRequest\x1a .gatekv_storage.BatchRemResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -47,10 +47,18 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_REMREQUEST']._serialized_end=396
   _globals['_REMRESPONSE']._serialized_start=398
   _globals['_REMRESPONSE']._serialized_end=428
-  _globals['_EMPTY']._serialized_start=430
-  _globals['_EMPTY']._serialized_end=437
-  _globals['_ADDRESS']._serialized_start=439
-  _globals['_ADDRESS']._serialized_end=476
-  _globals['_GATEKV_STORAGE']._serialized_start=479
-  _globals['_GATEKV_STORAGE']._serialized_end=972
+  _globals['_BATCHSETREQUEST']._serialized_start=430
+  _globals['_BATCHSETREQUEST']._serialized_end=490
+  _globals['_BATCHREMREQUEST']._serialized_start=492
+  _globals['_BATCHREMREQUEST']._serialized_end=552
+  _globals['_BATCHSETRESPONSE']._serialized_start=554
+  _globals['_BATCHSETRESPONSE']._serialized_end=589
+  _globals['_BATCHREMRESPONSE']._serialized_start=591
+  _globals['_BATCHREMRESPONSE']._serialized_end=626
+  _globals['_EMPTY']._serialized_start=628
+  _globals['_EMPTY']._serialized_end=635
+  _globals['_ADDRESS']._serialized_start=637
+  _globals['_ADDRESS']._serialized_end=674
+  _globals['_GATEKV_STORAGE']._serialized_start=677
+  _globals['_GATEKV_STORAGE']._serialized_end=1332
 # @@protoc_insertion_point(module_scope)

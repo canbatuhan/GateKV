@@ -12,6 +12,9 @@ service GateKV_Storage {
     rpc SetData (SetRequest) returns (SetResponse) {} // Gateway -> storage
     rpc GetData (GetRequest) returns (GetResponse) {} // Gateway -> storage
     rpc RemData (RemRequest) returns (RemResponse) {} // Gateway -> storage
+
+    rpc BatchSet (BatchSetRequest) returns (BatchSetResponse) {}
+    rpc BatchRem (BatchRemRequest) returns (BatchRemResponse) {}
 }
 
 message RegisterRequest {
@@ -49,6 +52,22 @@ message RemRequest {
 }
 
 message RemResponse {
+    bool success = 1;
+}
+
+message BatchSetRequest {
+    repeated SetRequest pairs = 1;
+}
+
+message BatchRemRequest {
+    repeated RemRequest pairs = 1;
+}
+
+message BatchSetResponse {
+    bool success = 1;
+}
+
+message BatchRemResponse {
     bool success = 1;
 }
 

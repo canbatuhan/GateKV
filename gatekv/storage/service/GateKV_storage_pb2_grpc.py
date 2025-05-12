@@ -69,6 +69,16 @@ class GateKV_StorageStub(object):
                 request_serializer=GateKV__storage__pb2.RemRequest.SerializeToString,
                 response_deserializer=GateKV__storage__pb2.RemResponse.FromString,
                 _registered_method=True)
+        self.BatchSet = channel.unary_unary(
+                '/gatekv_storage.GateKV_Storage/BatchSet',
+                request_serializer=GateKV__storage__pb2.BatchSetRequest.SerializeToString,
+                response_deserializer=GateKV__storage__pb2.BatchSetResponse.FromString,
+                _registered_method=True)
+        self.BatchRem = channel.unary_unary(
+                '/gatekv_storage.GateKV_Storage/BatchRem',
+                request_serializer=GateKV__storage__pb2.BatchRemRequest.SerializeToString,
+                response_deserializer=GateKV__storage__pb2.BatchRemResponse.FromString,
+                _registered_method=True)
 
 
 class GateKV_StorageServicer(object):
@@ -116,6 +126,18 @@ class GateKV_StorageServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def BatchSet(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def BatchRem(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_GateKV_StorageServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -153,6 +175,16 @@ def add_GateKV_StorageServicer_to_server(servicer, server):
                     servicer.RemData,
                     request_deserializer=GateKV__storage__pb2.RemRequest.FromString,
                     response_serializer=GateKV__storage__pb2.RemResponse.SerializeToString,
+            ),
+            'BatchSet': grpc.unary_unary_rpc_method_handler(
+                    servicer.BatchSet,
+                    request_deserializer=GateKV__storage__pb2.BatchSetRequest.FromString,
+                    response_serializer=GateKV__storage__pb2.BatchSetResponse.SerializeToString,
+            ),
+            'BatchRem': grpc.unary_unary_rpc_method_handler(
+                    servicer.BatchRem,
+                    request_deserializer=GateKV__storage__pb2.BatchRemRequest.FromString,
+                    response_serializer=GateKV__storage__pb2.BatchRemResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -344,6 +376,60 @@ class GateKV_Storage(object):
             '/gatekv_storage.GateKV_Storage/RemData',
             GateKV__storage__pb2.RemRequest.SerializeToString,
             GateKV__storage__pb2.RemResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def BatchSet(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/gatekv_storage.GateKV_Storage/BatchSet',
+            GateKV__storage__pb2.BatchSetRequest.SerializeToString,
+            GateKV__storage__pb2.BatchSetResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def BatchRem(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/gatekv_storage.GateKV_Storage/BatchRem',
+            GateKV__storage__pb2.BatchRemRequest.SerializeToString,
+            GateKV__storage__pb2.BatchRemResponse.FromString,
             options,
             channel_credentials,
             insecure,

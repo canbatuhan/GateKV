@@ -62,6 +62,18 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
             return GateKV_storage_pb2.RemResponse(success=False)
         self.__storage.rem(request.key)
         return GateKV_storage_pb2.RemResponse(success=True)
+    
+    def BatchSet(self, request, context):
+        success = True
+        for item in request.items:
+            success = success and self.__storage.set(item.key, item.value)
+        return GateKV_storage_pb2.BatchSetResponse(success=True)
+    
+    def BatchRem(self, request, context):
+        success = True
+        for item in request.items:
+            success = success and self.__storage.rem(item.key)
+        return GateKV_storage_pb2.BatchRemResponse(success=True)
 
 def serve():
     parser = argparse.ArgumentParser()
