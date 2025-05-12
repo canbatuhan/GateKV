@@ -18,7 +18,7 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
         self.__server.add_insecure_port("0.0.0.0:{}".format(self.__config.get("port")))
 
         self.__gossip_event = threading.Event()
-        self.__gossip_batch = GateKV_gateway_pb2.GossipMessage()
+        self.__gossip_batch = GateKV_gateway_pb2.GossipMessage(sets=[], rems=[])
         self.__gossip_period = self.__config.get("gossip")
 
         self.__client = GateKV_GatewayNode_Client(client_conf)
@@ -31,10 +31,10 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
         try:
             self.__client.registerNeighbour(request.type,
                                             request.alias,
-                                            request.host,
-                                            request.port)
+                                            request.sender.host,
+                                            request.sender.port)
         except Exception as e:
-            print(e.with_traceback(None))
+            self.__logger.log(e.with_traceback(None))
 
         return GateKV_gateway_pb2.RegisterResponse(alias = self.__config.get("alias"))
 
@@ -59,7 +59,7 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
                 # Roll-back
 
         except Exception as e:
-            print(e.with_traceback(None))
+            self.__logger.log(e.with_traceback(None))
 
         machine.send_event(GateKV_GatewayNode_Events.DONE)
         return GateKV_gateway_pb2.SetResponse(success = success)       
@@ -77,7 +77,7 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
                 self.__machine_map.removeStateMachine(request.key)
 
         except Exception as e:
-            print(e.with_traceback(None))
+            self.__logger.log(e.with_traceback(None))
 
         machine.send_event(GateKV_GatewayNode_Events.DONE)
         return GateKV_gateway_pb2.GetResponse(success = success, value = value)
@@ -98,12 +98,11 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
 
             else:
                 # Roll-back
-                pass
+                machine.send_event(GateKV_GatewayNode_Events.DONE)
         
         except Exception as e:
-            print(e.with_traceback(None))
+            self.__logger.log(e.with_traceback(None))
         
-        machine.send_event(GateKV_GatewayNode_Events.DONE)
         return GateKV_gateway_pb2.RemResponse(success = success)
         
     def Gossip(self, request, context):
@@ -123,14 +122,19 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
             if set_success:
                 for each in request.sets:
                     self.__version_map.setPairVersion(each.key, each.version)
+                    machine.send_event(GateKV_GatewayNode_Events.DONE)
             
             if rem_success:
                 for each in request.rems:
                     self.__machine_map.removeStateMachine(each.key)
                     self.__version_map.removePairVersion(each.key)
+            
+            else:
+                for each in request.rems:
+                    machine.send_event(GateKV_GatewayNode_Events.DONE)
 
         except Exception as e:
-            print(e.with_traceback(None))
+            self.__logger.log(e.with_traceback(None))
         
         return GateKV_gateway_pb2.GossipAck(success = set_success and rem_success)
     
@@ -149,8 +153,8 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
                 try:
                     success = self.__client.gossip_protocol(self.__gossip_batch)
                     if success:
-                        del self.__gossip_batch.sets
-                        del self.__gossip_batch.rems
+                        del self.__gossip_batch.sets[:]
+                        del self.__gossip_batch.rems[:]
                     time.sleep(self.__gossip_period)
 
                 except:
