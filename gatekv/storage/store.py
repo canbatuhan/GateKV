@@ -18,3 +18,6 @@ class GateKV_StorageNode_LocalStore:
 
     def rem(self, key):
         return self.__store.remove(key)
+    
+    def dump(self):
+        return self.__store.save()

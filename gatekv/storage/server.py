@@ -1,4 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
+import threading
+import time
 import grpc
 
 from gatekv.storage.client import GateKV_StorageNode_Client
@@ -14,6 +16,9 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
         GateKV_gateway_pb2_grpc.add_GateKV_GatewayServicer_to_server(self, self.__server)
         self.__server.add_insecure_port("0.0.0.0:{}".format(self.__config.get("port")))
         
+        self.__dump_event = threading.Event()
+        self.__dump_period = self.__config.get("store").get("dump")
+
         self.__client = GateKV_StorageNode_Client(client_conf)
         self.__storage = GateKV_StorageNode_LocalStore(store_conf)
 
@@ -91,11 +96,25 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
                                         self.__config.get("alias"),
                                         self.__config.get("host"),
                                         self.__config.get("port"))
+        
+    def __start_dump(self):
+        def __loop():
+            while not self.__dump_event.is_set():
+                try:
+                    self.__storage.dump()
+                    time.sleep(self.__dump_period)
+
+                except:
+                    pass
+
+        threading.Thread(target = __loop, daemon = True).start()
 
     def __infinite_loop(self):
         self.__server.wait_for_termination()
+        self.__dump_event.set()
 
     def start(self):
         self.__start_server()
         self.__register()
+        self.__start_dump()
         self.__infinite_loop()
