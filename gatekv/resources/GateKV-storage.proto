@@ -5,9 +5,9 @@ package gatekv_storage;
 service GateKV_Storage {
     rpc Register (RegisterRequest) returns (RegisterResponse) {} // To join the cluster
 
-    rpc Set (SetRequest) returns (Empty)       {} // Redirect to gateway (user -> storage)
+    rpc Set (SetRequest) returns (SetResponse)       {} // Redirect to gateway (user -> storage)
     rpc Get (GetRequest) returns (GetResponse) {} // Handle locally
-    rpc Rem (RemRequest) returns (Empty)       {} // Redirect to gateway (user -> storage)
+    rpc Rem (RemRequest) returns (RemResponse)       {} // Redirect to gateway (user -> storage)
 
     rpc SetData (SetRequest) returns (SetResponse) {} // Gateway -> storage
     rpc GetData (GetRequest) returns (GetResponse) {} // Gateway -> storage

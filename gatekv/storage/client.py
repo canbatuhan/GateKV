@@ -46,7 +46,7 @@ class GateKV_StorageNode_Client:
         
         for storage in self.__config.get("storage"):
             try:
-                stub = GateKV_GatewayStub(grpc.insecure_channel("{}:{}".format(
+                stub = GateKV_StorageStub(grpc.insecure_channel("{}:{}".format(
                     storage.get("host"), storage.get("port"))))
                 request = GateKV_storage_pb2.RegisterRequest(
                     type = "gateway",
@@ -62,14 +62,9 @@ class GateKV_StorageNode_Client:
             
     # Gateway Calls
     def callSetOnGateway(self, key, value):
-        # request = GateKV_gateway_pb2.SetRequest(key=key, value=value, alias=alias)
-        # response = self.__gateway_stub.Set(request)
-        # return response.success
-
-        # Simulate loooooong time to wait for gateway
-        time.sleep(1)
-
-        return True
+        request = GateKV_gateway_pb2.SetRequest(key=key, value=value)
+        response = self.__gateway_stub.Set(request)
+        return response.success
 
     # not important function
     def callGetOnGateway(self, key):
@@ -79,12 +74,10 @@ class GateKV_StorageNode_Client:
         return True
 
     def callRemOnGateway(self, key):
-        # request = GateKV_gateway_pb2.RemRequest(key=key)  # Correct message name
-        # response = self.__gateway_stub.Rem(request)  # Adjusted method name
-        # print(f"Rem Response: {response.success}")
-        # return response.success
-        time.sleep(1)
-        return True
+        request = GateKV_gateway_pb2.RemRequest(key=key)  # Correct message name
+        response = self.__gateway_stub.Rem(request)  # Adjusted method name
+
+        return response.success
 
     # Storage Calls
     def callSetOnStorage(self, key, value):

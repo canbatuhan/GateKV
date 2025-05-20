@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import gatekv.gateway.service.GateKV_gateway_pb2 as GateKV__gateway__pb2
+from . import GateKV_gateway_pb2 as GateKV__gateway__pb2
 
 GRPC_GENERATED_VERSION = '1.70.0'
 GRPC_VERSION = grpc.__version__

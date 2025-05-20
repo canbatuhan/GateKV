@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import gatekv.storage.service.GateKV_storage_pb2 as GateKV__storage__pb2
+from . import GateKV_storage_pb2 as GateKV__storage__pb2
 
 GRPC_GENERATED_VERSION = '1.70.0'
 GRPC_VERSION = grpc.__version__
@@ -42,7 +42,7 @@ class GateKV_StorageStub(object):
         self.Set = channel.unary_unary(
                 '/gatekv_storage.GateKV_Storage/Set',
                 request_serializer=GateKV__storage__pb2.SetRequest.SerializeToString,
-                response_deserializer=GateKV__storage__pb2.Empty.FromString,
+                response_deserializer=GateKV__storage__pb2.SetResponse.FromString,
                 _registered_method=True)
         self.Get = channel.unary_unary(
                 '/gatekv_storage.GateKV_Storage/Get',
@@ -52,7 +52,7 @@ class GateKV_StorageStub(object):
         self.Rem = channel.unary_unary(
                 '/gatekv_storage.GateKV_Storage/Rem',
                 request_serializer=GateKV__storage__pb2.RemRequest.SerializeToString,
-                response_deserializer=GateKV__storage__pb2.Empty.FromString,
+                response_deserializer=GateKV__storage__pb2.RemResponse.FromString,
                 _registered_method=True)
         self.SetData = channel.unary_unary(
                 '/gatekv_storage.GateKV_Storage/SetData',
@@ -149,7 +149,7 @@ def add_GateKV_StorageServicer_to_server(servicer, server):
             'Set': grpc.unary_unary_rpc_method_handler(
                     servicer.Set,
                     request_deserializer=GateKV__storage__pb2.SetRequest.FromString,
-                    response_serializer=GateKV__storage__pb2.Empty.SerializeToString,
+                    response_serializer=GateKV__storage__pb2.SetResponse.SerializeToString,
             ),
             'Get': grpc.unary_unary_rpc_method_handler(
                     servicer.Get,
@@ -159,7 +159,7 @@ def add_GateKV_StorageServicer_to_server(servicer, server):
             'Rem': grpc.unary_unary_rpc_method_handler(
                     servicer.Rem,
                     request_deserializer=GateKV__storage__pb2.RemRequest.FromString,
-                    response_serializer=GateKV__storage__pb2.Empty.SerializeToString,
+                    response_serializer=GateKV__storage__pb2.RemResponse.SerializeToString,
             ),
             'SetData': grpc.unary_unary_rpc_method_handler(
                     servicer.SetData,
@@ -240,7 +240,7 @@ class GateKV_Storage(object):
             target,
             '/gatekv_storage.GateKV_Storage/Set',
             GateKV__storage__pb2.SetRequest.SerializeToString,
-            GateKV__storage__pb2.Empty.FromString,
+            GateKV__storage__pb2.SetResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -294,7 +294,7 @@ class GateKV_Storage(object):
             target,
             '/gatekv_storage.GateKV_Storage/Rem',
             GateKV__storage__pb2.RemRequest.SerializeToString,
-            GateKV__storage__pb2.Empty.FromString,
+            GateKV__storage__pb2.RemResponse.FromString,
             options,
             channel_credentials,
             insecure,

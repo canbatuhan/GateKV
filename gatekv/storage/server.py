@@ -12,12 +12,13 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
     def __init__(self, server_conf:dict, client_conf:dict, store_conf:dict):
         super().__init__()
         self.__config = server_conf
+        self.node_alias = server_conf["alias"]
         self.__server = grpc.server(thread_pool=ThreadPoolExecutor(max_workers=self.__config.get("workers")))
-        GateKV_gateway_pb2_grpc.add_GateKV_GatewayServicer_to_server(self, self.__server)
+        GateKV_storage_pb2_grpc.add_GateKV_StorageServicer_to_server(self, self.__server)
         self.__server.add_insecure_port("0.0.0.0:{}".format(self.__config.get("port")))
         
         self.__dump_event = threading.Event()
-        self.__dump_period = self.__config.get("store").get("dump")
+        self.__dump_period = store_conf["dump"]
 
         self.__client = GateKV_StorageNode_Client(client_conf)
         self.__storage = GateKV_StorageNode_LocalStore(store_conf)
@@ -48,7 +49,7 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
         value = self.__storage.get(request.key)
         if value is not None:
             print(f"Node '{self.node_alias}' found key '{request.key}' locally.")
-            return GateKV_storage_pb2.GetResponse(success=True, value=value[0], visitedNodes=list(visited_nodes))
+            return GateKV_storage_pb2.GetResponse(success=True, value=value, visitedNodes=list(visited_nodes))
 
         print(f"Node '{self.node_alias}' didn't find key '{request.key}', querying other nodes...")
         response = self.__client.callGetOnStorage(request.key, visited_nodes)
@@ -63,7 +64,7 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
         value = self.__storage.get(request.key)
         if value == None:
             return GateKV_storage_pb2.GetResponse(success=False, value=None)
-        return GateKV_storage_pb2.GetResponse(success=True, value=value[0])
+        return GateKV_storage_pb2.GetResponse(success=True, value=value)
     
     def Rem(self, request, context):
         gateway_response = self.__client.callRemOnGateway(request.key)

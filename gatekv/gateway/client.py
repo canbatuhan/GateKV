@@ -30,11 +30,11 @@ class GateKV_GatewayNode_Client:
     # Callbacks for Storage Servers
 
     def __callSetOnStorage(self, stub:GateKV_StorageStub, key, value):
-        """try:
-            response = stub.SetData(GateKV_storage_pb2.SetRequest(key = key))
+        try:
+            response = stub.SetData(GateKV_storage_pb2.SetRequest(key=key, value=value))
             return response.success
         except Exception as e:
-            self.__logger.log(e.with_traceback(None))"""
+            self.__logger.log(e.with_traceback(None))
         self.__logger.log("Calling Set on Storage Neighbour...")
         return (True)
 
@@ -47,26 +47,26 @@ class GateKV_GatewayNode_Client:
         self.__logger.log("Calling Get on Storage Neighbour...")
         return (True, 0)
 
-    def __callRemOnStorage(self, stub:GateKV_StorageStub, key, value=None):
-        """try:
-            response = stub.RemData(GateKV_storage_pb2.RemRequest(key))
+    def __callRemOnStorage(self, stub:GateKV_StorageStub, key, value):
+        try:
+            response = stub.RemData(GateKV_storage_pb2.RemRequest(key=key))
             return response.success
         except Exception as e:
-            self.__logger.log(e.with_traceback(None))"""
+            self.__logger.log(e.with_traceback(None))
         self.__logger.log("Calling Remove on Storage Neighbour...")
         return (True)
     
-    def __callBatchSetOnStorage(self, stub:GateKV_StorageStub, batch):
+    def __callBatchSetOnStorage(self, stub:GateKV_StorageStub, batch, val):
         return (True)
 
-    def __callBatchRemOnStorage(self, stub:GateKV_StorageStub, batch):
+    def __callBatchRemOnStorage(self, stub:GateKV_StorageStub, batch, val):
         return (True)
 
     # Broadcasting Methods
 
     def __broadcast_to_storage(self, callback, key=None, value=None):
         responses = []
-        for stub in self.__storage_stubs:
+        for stub in self.__storage_stubs.values():
             responses.append(callback(stub, key, value))
         return responses
 
@@ -108,7 +108,7 @@ class GateKV_GatewayNode_Client:
         
         for storage in self.__config.get("storage"):
             try:
-                stub = GateKV_GatewayStub(grpc.insecure_channel("{}:{}".format(
+                stub = GateKV_StorageStub(grpc.insecure_channel("{}:{}".format(
                     storage.get("host"), storage.get("port"))))
                 request = GateKV_storage_pb2.RegisterRequest(
                     type = "gateway",
