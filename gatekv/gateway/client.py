@@ -30,31 +30,31 @@ class GateKV_GatewayNode_Client:
     # Callbacks for Storage Servers
 
     def __callSetOnStorage(self, stub:GateKV_StorageStub, key, value):
+        self.__logger.log("Calling Set on Storage Neighbour...")
         try:
             response = stub.SetData(GateKV_storage_pb2.SetRequest(key=key, value=value))
             return response.success
         except Exception as e:
             self.__logger.log(e.with_traceback(None))
-        self.__logger.log("Calling Set on Storage Neighbour...")
-        return (True)
+        return (False)
 
     def __callGetOnStorage(self, stub:GateKV_StorageStub, key, value=None):
-        """try:
+        self.__logger.log("Calling Get on Storage Neighbour...")
+        try:
             response = stub.GetData(GateKV_storage_pb2.GetRequest(key = key))
             response.success, response.value
         except Exception as e:
-            self.__logger.log(e.with_traceback(None))"""
-        self.__logger.log("Calling Get on Storage Neighbour...")
-        return (True, 0)
+            self.__logger.log(e.with_traceback(None))
+        return (False, None)
 
     def __callRemOnStorage(self, stub:GateKV_StorageStub, key, value):
+        self.__logger.log("Calling Remove on Storage Neighbour...")
         try:
             response = stub.RemData(GateKV_storage_pb2.RemRequest(key=key))
             return response.success
         except Exception as e:
             self.__logger.log(e.with_traceback(None))
-        self.__logger.log("Calling Remove on Storage Neighbour...")
-        return (True)
+        return (False)
     
     def __callBatchSetOnStorage(self, stub:GateKV_StorageStub, batch, val):
         return (True)
@@ -124,8 +124,7 @@ class GateKV_GatewayNode_Client:
 
     def set_protocol(self, key, value):
         responses = self.__broadcast_to_storage(self.__callSetOnStorage, key, value)
-        # Count successes
-        return True
+        return responses.count(True) > len(responses) // 2
 
     def get_protocol(self, key):
         storage_stub = random.choice(self.__storage_stubs.values())
@@ -134,19 +133,16 @@ class GateKV_GatewayNode_Client:
         
     def rem_protocol(self, key):
         responses = self.__broadcast_to_storage(self.__callRemOnStorage, key)
-        # Count successes
-        return True
+        return responses.count(True) > len(responses) // 2
     
     def batch_set_protocol(self, batch):
         responses = self.__broadcast_to_storage(self.__callBatchSetOnStorage, batch)
-        # Count successes
-        return True
+        return responses.count(True) > len(responses) // 2
 
     def batch_rem_protocol(self, batch):
         responses = self.__broadcast_to_storage(self.__callBatchRemOnStorage, batch)
-        # Count successes
-        return True
+        return responses.count(True) > len(responses) // 2
     
     def gossip_protocol(self, batch):
         responses = self.__broadcast_to_gateway(self.__callGossipOnGateway, batch)
-        return True
+        return responses.count(True) > len(responses) // 2

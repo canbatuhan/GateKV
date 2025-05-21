@@ -1,0 +1,1 @@
+# In gossip, check versions before batch-set
