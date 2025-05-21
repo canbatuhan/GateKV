@@ -1,3 +1,4 @@
+server:
   alias: Storage-02
   host: 127.0.0.1
   port: 8020 # Storage-02

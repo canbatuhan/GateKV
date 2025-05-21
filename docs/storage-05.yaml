@@ -1,3 +1,4 @@
+server:
   alias: Storage-05
   host: 127.0.0.1
   port: 8050 # Storage-05
