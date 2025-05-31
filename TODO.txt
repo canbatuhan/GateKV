@@ -1,1 +1,2 @@
 # In gossip, check versions before batch-set
+# We need to convert from gossip message to batch request "from gateway to storage"

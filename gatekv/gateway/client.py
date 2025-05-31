@@ -41,13 +41,13 @@ class GateKV_GatewayNode_Client:
     def __callGetOnStorage(self, stub:GateKV_StorageStub, key, value=None):
         self.__logger.log("Calling Get on Storage Neighbour...")
         try:
-            response = stub.GetData(GateKV_storage_pb2.GetRequest(key = key))
-            response.success, response.value
+            response = stub.Get(GateKV_storage_pb2.GetRequest(key = key))
+            return response.success, response.value
         except Exception as e:
             self.__logger.log(e.with_traceback(None))
         return (False, None)
 
-    def __callRemOnStorage(self, stub:GateKV_StorageStub, key, value):
+    def __callRemOnStorage(self, stub:GateKV_StorageStub, key, value=None):
         self.__logger.log("Calling Remove on Storage Neighbour...")
         try:
             response = stub.RemData(GateKV_storage_pb2.RemRequest(key=key))
@@ -56,17 +56,33 @@ class GateKV_GatewayNode_Client:
             self.__logger.log(e.with_traceback(None))
         return (False)
     
-    def __callBatchSetOnStorage(self, stub:GateKV_StorageStub, batch, val):
-        return (True)
+    def __callBatchSetOnStorage(self, stub:GateKV_StorageStub, batch, dummy=None):
+        self.__logger.log("Calling BatchSet on Storage Neighbour...")
+        try:
+            request = GateKV_storage_pb2.BatchSetRequest()
+            request.pairs.extend(batch.pairs)
+            response = stub.BatchSet(request)
+            return response.success
+        except Exception as e:
+            self.__logger.log(e.with_traceback(None))
+        return (False)
 
-    def __callBatchRemOnStorage(self, stub:GateKV_StorageStub, batch, val):
-        return (True)
+    def __callBatchRemOnStorage(self, stub:GateKV_StorageStub, batch, dummy=None):
+        self.__logger.log("Calling BatchRemove on Storage Neighbour...")
+        try:
+            request = GateKV_storage_pb2.BatchRemRequest()
+            request.pairs.extend(batch.pairs)
+            response = stub.BatchRem(request)
+            return response.success
+        except Exception as e:  
+            self.__logger.log(e.with_traceback(None))
+        return (False) 
 
     # Broadcasting Methods
 
     def __broadcast_to_storage(self, callback, key=None, value=None):
         responses = []
-        for stub in self.__storage_stubs.values():
+        for _, stub in self.__storage_stubs.items():
             responses.append(callback(stub, key, value))
         return responses
 
@@ -111,7 +127,7 @@ class GateKV_GatewayNode_Client:
                 stub = GateKV_StorageStub(grpc.insecure_channel("{}:{}".format(
                     storage.get("host"), storage.get("port"))))
                 request = GateKV_storage_pb2.RegisterRequest(
-                    type = "gateway",
+                    type = type,
                     alias = alias,
                     sender = GateKV_storage_pb2.Address(
                         host = host,
@@ -123,11 +139,12 @@ class GateKV_GatewayNode_Client:
                 self.__logger.log(e.with_traceback(None))
 
     def set_protocol(self, key, value):
+        self.__logger.log("Setting new key-value pair on Storage Neighbours...")
         responses = self.__broadcast_to_storage(self.__callSetOnStorage, key, value)
         return responses.count(True) > len(responses) // 2
 
     def get_protocol(self, key):
-        storage_stub = random.choice(self.__storage_stubs.values())
+        storage_stub = random.choice(list(self.__storage_stubs.values()))
         success, value = self.__callGetOnStorage(storage_stub, key)
         return success, value
         

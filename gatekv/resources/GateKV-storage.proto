@@ -10,7 +10,6 @@ service GateKV_Storage {
     rpc Rem (RemRequest) returns (RemResponse)       {} // Redirect to gateway (user -> storage)
 
     rpc SetData (SetRequest) returns (SetResponse) {} // Gateway -> storage
-    rpc GetData (GetRequest) returns (GetResponse) {} // Gateway -> storage
     rpc RemData (RemRequest) returns (RemResponse) {} // Gateway -> storage
 
     rpc BatchSet (BatchSetRequest) returns (BatchSetResponse) {}

@@ -8,6 +8,7 @@ from gatekv.gateway.util import GateKV_GatewayNode_Logger, GateKV_GatewayNode_Pa
 from gatekv.gateway.service import GateKV_gateway_pb2
 from gatekv.gateway.service.GateKV_gateway_pb2_grpc import GateKV_GatewayServicer
 from gatekv.gateway.statemachine import GateKV_GatewayNode_Events
+from gatekv.storage.service import GateKV_storage_pb2
 
 class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
     def __init__(self, server_conf:dict, client_conf:dict, state_machine_conf:dict):
@@ -28,6 +29,7 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
         self.__logger = GateKV_GatewayNode_Logger("Server")
 
     def Register(self, request, context):
+        self.__logger.log("Registering new neighbour...")
         try:
             self.__client.register_neighbour(request.type,
                                              request.alias,
@@ -39,11 +41,13 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
         return GateKV_gateway_pb2.RegisterResponse(alias = self.__config.get("alias"))
 
     def Set(self, request, context):
+        self.__logger.log("Setting new key-value pair...")
         success = False
 
         try:
             machine = self.__machine_map.getStateMachine(request.key)
             machine.send_event(GateKV_GatewayNode_Events.WRITE)
+
             success = self.__client.set_protocol(request.key, request.value)
 
             if success:
@@ -65,6 +69,7 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
         return GateKV_gateway_pb2.SetResponse(success = success)       
     
     def Get(self, request, context):
+        self.__logger.log("Getting value for key...")
         success = False
         value = None
 
@@ -83,6 +88,7 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
         return GateKV_gateway_pb2.GetResponse(success = success, value = value)
     
     def Rem(self, request, context):
+        self.__logger.log("Removing key-value pair...")
         success = False
 
         try:
@@ -106,6 +112,11 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
         return GateKV_gateway_pb2.RemResponse(success = success)
         
     def Gossip(self, request, context):
+        self.__logger.log("Gossiping with neighbours...")
+        set_success = False
+        rem_success = False
+
+
         try:
             # Set Phase
             for each in request.sets:
@@ -115,9 +126,16 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
             for each in request.rems:
                 machine = self.__machine_map.getStateMachine(each.key)
                 machine.send_event(GateKV_GatewayNode_Events.WRITE)
-
-            set_success = self.__client.batch_set_protocol(request.sets)
-            rem_success = self.__client.batch_rem_protocol(request.rems)
+            
+            batch_set = GateKV_storage_pb2.BatchSetRequest(
+                pairs = [GateKV_storage_pb2.SetRequest(key=each.key, value=each.value)
+                        for each in request.sets])
+            set_success = self.__client.batch_set_protocol(batch_set)
+            
+            batch_rem = GateKV_storage_pb2.BatchRemRequest(
+                pairs = [GateKV_storage_pb2.RemRequest(key=each.key)
+                        for each in request.rems])
+            rem_success = self.__client.batch_rem_protocol(batch_rem)
             
             if set_success:
                 for each in request.sets:
@@ -151,6 +169,7 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
         def __loop():
             while not self.__gossip_event.is_set():
                 try:
+                    self.__logger.log("Gossiping with neighbours...")
                     success = self.__client.gossip_protocol(self.__gossip_batch)
                     if success:
                         del self.__gossip_batch.sets[:]

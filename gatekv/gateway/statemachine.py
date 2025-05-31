@@ -31,16 +31,16 @@ class GateKV_GatewayNode_ReplicatedStateMachine:
         timeout = self.__config.get("min_timeout")
         while not self.__machine.check_event(event.name):
             if timeout >= self.__config.get("max_timeout"):
-                raise GateKV_GatewayNode_TimeoutException()
+                raise GateKV_GatewayNode_TimeoutException("State machine timeout")
             time.sleep(timeout)
             timeout *= 2
 
         # Check for multi-read case
         current_state = self.__machine.get_context().get_current_state().get_id()
+        if event == GateKV_GatewayNode_Events.READ:
+            self.__stack.append("x") # Add another reading flag
         if current_state == GateKV_GatewayNode_States.READING.name:
-            if event == GateKV_GatewayNode_Events.READ:
-                self.__stack.append("x") # Add another reading flag
-            elif event == GateKV_GatewayNode_Events.DONE:
+            if event == GateKV_GatewayNode_Events.DONE:
                 self.__stack.pop() # Pop one of the reading flags
                 if len(self.__stack) != 0:
                     return # There are some read requests left

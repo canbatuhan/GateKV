@@ -1,24 +1,27 @@
-from queue import Queue
-import random
 import threading
 import grpc
-import time
+
+from queue import Queue
 from typing import Dict, List 
+
 from gatekv.gateway.service.GateKV_gateway_pb2_grpc import GateKV_GatewayStub
 from gatekv.gateway.service import GateKV_gateway_pb2
+from gatekv.gateway.util import GateKV_GatewayNode_Logger
+
 from gatekv.storage.service.GateKV_storage_pb2_grpc import GateKV_StorageStub
 from gatekv.storage.service import GateKV_storage_pb2
-from gatekv.storage.service import GateKV_storage_pb2_grpc
 
 class GateKV_StorageNode_Client:
     def __init__(self, client_conf:dict):
         self.__config = client_conf
-        self.__gateway_stub:GateKV_GatewayStub = None # stubs["gateway-01"].Set(...)
-        self.__storage_stubs:Dict[str:GateKV_StorageStub] = dict() # stubs["storage-01"].Set(...)
-        
-    # Util Methods
+        self.__gateway_stub:GateKV_GatewayStub = None
+        self.__storage_stubs:Dict[str:GateKV_StorageStub] = dict()
+
+        self.__logger = GateKV_GatewayNode_Logger("Client")
 
     def register_neighbour(self, type, alias, host, port):
+        self.__logger.log("Registering new neighbour...")
+
         channel = grpc.insecure_channel("{}:{}".format(host, port))
         if type == "gateway":
             stub = GateKV_GatewayStub(channel)
@@ -28,6 +31,8 @@ class GateKV_StorageNode_Client:
             self.__storage_stubs.update({alias : stub})
 
     def register_protocol(self, type, alias, host, port):
+        self.__logger.log("Registering new protocol...")
+
         gateway = self.__config.get("gateway")
         try:
             stub = GateKV_GatewayStub(grpc.insecure_channel("{}:{}".format(
@@ -49,7 +54,7 @@ class GateKV_StorageNode_Client:
                 stub = GateKV_StorageStub(grpc.insecure_channel("{}:{}".format(
                     storage.get("host"), storage.get("port"))))
                 request = GateKV_storage_pb2.RegisterRequest(
-                    type = "gateway",
+                    type = type,
                     alias = alias,
                     sender = GateKV_storage_pb2.Address(
                         host = host,
@@ -60,30 +65,21 @@ class GateKV_StorageNode_Client:
             except Exception as e:
                 print(e.with_traceback(None))
             
-    # Gateway Calls
     def callSetOnGateway(self, key, value):
+        self.__logger.log("Setting new key-value pair on gateway...")
         request = GateKV_gateway_pb2.SetRequest(key=key, value=value)
         response = self.__gateway_stub.Set(request)
         return response.success
 
-    # not important function
-    def callGetOnGateway(self, key):
-        # request = GateKV_gateway_pb2.GetRequest(key=key)
-        # response = self.__gateway_stub.Get(request)
-        # return response.success, response.value
-        return True
-
     def callRemOnGateway(self, key):
-        request = GateKV_gateway_pb2.RemRequest(key=key)  # Correct message name
-        response = self.__gateway_stub.Rem(request)  # Adjusted method name
-
+        self.__logger.log("Removing key-value pair on gateway...")  
+        request = GateKV_gateway_pb2.RemRequest(key=key)
+        response = self.__gateway_stub.Rem(request) 
         return response.success
 
-    # Storage Calls
-    def callSetOnStorage(self, key, value):
-        pass
-
     def callGetOnStorage(self, key, visited_nodes):
+        self.__logger.log("Getting value for key on storage...")
+        
         visited_nodes = set(visited_nodes)
         result = {'response': None}
         lock = threading.Lock()
@@ -132,6 +128,3 @@ class GateKV_StorageNode_Client:
             return result['response']
 
         return GateKV_storage_pb2.GetResponse(success=False, value="", visitedNodes=list(visited_nodes))
-
-    def callRemOnStorage(self, key):
-        pass

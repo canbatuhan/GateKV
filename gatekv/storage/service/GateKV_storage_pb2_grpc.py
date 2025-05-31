@@ -59,11 +59,6 @@ class GateKV_StorageStub(object):
                 request_serializer=GateKV__storage__pb2.SetRequest.SerializeToString,
                 response_deserializer=GateKV__storage__pb2.SetResponse.FromString,
                 _registered_method=True)
-        self.GetData = channel.unary_unary(
-                '/gatekv_storage.GateKV_Storage/GetData',
-                request_serializer=GateKV__storage__pb2.GetRequest.SerializeToString,
-                response_deserializer=GateKV__storage__pb2.GetResponse.FromString,
-                _registered_method=True)
         self.RemData = channel.unary_unary(
                 '/gatekv_storage.GateKV_Storage/RemData',
                 request_serializer=GateKV__storage__pb2.RemRequest.SerializeToString,
@@ -114,12 +109,6 @@ class GateKV_StorageServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetData(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
     def RemData(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -165,11 +154,6 @@ def add_GateKV_StorageServicer_to_server(servicer, server):
                     servicer.SetData,
                     request_deserializer=GateKV__storage__pb2.SetRequest.FromString,
                     response_serializer=GateKV__storage__pb2.SetResponse.SerializeToString,
-            ),
-            'GetData': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetData,
-                    request_deserializer=GateKV__storage__pb2.GetRequest.FromString,
-                    response_serializer=GateKV__storage__pb2.GetResponse.SerializeToString,
             ),
             'RemData': grpc.unary_unary_rpc_method_handler(
                     servicer.RemData,
@@ -322,33 +306,6 @@ class GateKV_Storage(object):
             '/gatekv_storage.GateKV_Storage/SetData',
             GateKV__storage__pb2.SetRequest.SerializeToString,
             GateKV__storage__pb2.SetResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def GetData(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/gatekv_storage.GateKV_Storage/GetData',
-            GateKV__storage__pb2.GetRequest.SerializeToString,
-            GateKV__storage__pb2.GetResponse.FromString,
             options,
             channel_credentials,
             insecure,

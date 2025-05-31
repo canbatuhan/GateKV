@@ -3,6 +3,7 @@ import threading
 import time
 import grpc
 
+from gatekv.gateway.util import GateKV_GatewayNode_Logger
 from gatekv.storage.client import GateKV_StorageNode_Client
 from gatekv.storage.service import GateKV_storage_pb2, GateKV_storage_pb2_grpc
 from gatekv.gateway.service import GateKV_gateway_pb2, GateKV_gateway_pb2_grpc
@@ -23,7 +24,12 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
         self.__client = GateKV_StorageNode_Client(client_conf)
         self.__storage = GateKV_StorageNode_LocalStore(store_conf)
 
+        self.__logger = GateKV_GatewayNode_Logger("Server")
+
     def Register(self, request, context):
+        self.__logger.log("Registering new neighbour...")
+
+
         try:
             self.__client.register_neighbour(request.type,
                                              request.alias,
@@ -35,6 +41,7 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
         return GateKV_storage_pb2.RegisterResponse(alias = self.__config.get("alias"))
     
     def Set(self, request, context):
+        self.__logger.log("Setting new key-value pair...")
         gateway_response = self.__client.callSetOnGateway(request.key, request.value)
         return GateKV_storage_pb2.SetResponse(success=gateway_response)
     
@@ -43,6 +50,7 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
         return GateKV_storage_pb2.SetResponse(success=True)
     
     def Get(self, request, context):
+        self.__logger.log("Getting key-value pair...")
         visited_nodes = set(request.visitedNodes)
         visited_nodes.add(self.node_alias)
 
@@ -59,14 +67,9 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
             value=response.value,
             visitedNodes=response.visitedNodes
         )
-
-    def GetData(self, request, context):
-        value = self.__storage.get(request.key)
-        if value == None:
-            return GateKV_storage_pb2.GetResponse(success=False, value=None)
-        return GateKV_storage_pb2.GetResponse(success=True, value=value)
     
     def Rem(self, request, context):
+        self.__logger.log("Removing key-value pair...")
         gateway_response = self.__client.callRemOnGateway(request.key)
         return GateKV_storage_pb2.RemResponse(success=gateway_response)
     
@@ -78,14 +81,16 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
         return GateKV_storage_pb2.RemResponse(success=True)
     
     def BatchSet(self, request, context):
+        self.__logger.log("Setting new key-value pairs...")
         success = True
-        for item in request.items:
+        for item in request.pairs:
             success = success and self.__storage.set(item.key, item.value)
         return GateKV_storage_pb2.BatchSetResponse(success=True)
     
     def BatchRem(self, request, context):
+        self.__logger.log("Removing key-value pairs...")
         success = True
-        for item in request.items:
+        for item in request.pairs:
             success = success and self.__storage.rem(item.key)
         return GateKV_storage_pb2.BatchRemResponse(success=True)
     
