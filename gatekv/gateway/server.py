@@ -19,6 +19,7 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
         self.__server.add_insecure_port("0.0.0.0:{}".format(self.__config.get("port")))
 
         self.__gossip_event = threading.Event()
+        self.__gossip_lock  = threading.Lock()
         self.__gossip_batch = GateKV_gateway_pb2.GossipMessage(sets=[], rems=[])
         self.__gossip_period = self.__config.get("gossip")
 
@@ -36,12 +37,16 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
             if each.key == gossip_data.key: self.__gossip_batch.rems.remove(each)
 
     def __append_set(self, gossip_data):
+        self.__gossip_lock.acquire()
         self.__remove_duplicates(gossip_data)
         self.__gossip_batch.sets.extend([gossip_data])
+        self.__gossip_lock.release()
 
     def __append_rem(self, gossip_data):
+        self.__gossip_lock.acquire()
         self.__remove_duplicates(gossip_data)
         self.__gossip_batch.rems.extend([gossip_data])
+        self.__gossip_lock.release()
         
     def __append_to_gossip_batch(self, callback, gossip_data):
         threading.Thread(callback(gossip_data)).start()
@@ -122,17 +127,20 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
 
             else:
                 # Roll-back
-                machine.send_event(GateKV_GatewayNode_Events.DONE)
+                pass
         
         except Exception as e:
             self.__logger.log(e.with_traceback(None))
-        
+
+        machine.send_event(GateKV_GatewayNode_Events.DONE)
         return GateKV_gateway_pb2.RemResponse(success = success)
         
     def Gossip(self, request, context):
         self.__logger.log("Gossiping with neighbours...")
         set_success = False
         rem_success = False
+
+        self.__logger.log(f"Remove batch for gossipn = {request.rems}")
 
         try:
             batch_set = GateKV_storage_pb2.BatchSetRequest(pairs = [])
@@ -161,6 +169,7 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
             
             if set_success:
                 for each in request.sets:
+                    machine = self.__machine_map.getStateMachine(each.key)
                     self.__version_map.setPairVersion(each.key, each.version)
                     machine.send_event(GateKV_GatewayNode_Events.DONE)
             
@@ -171,6 +180,7 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
             
             else:
                 for each in batch_rem.pairs:
+                    machine = self.__machine_map.getStateMachine(each.key)
                     machine.send_event(GateKV_GatewayNode_Events.DONE)
 
         except Exception as e:
@@ -192,10 +202,11 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
             while not self.__gossip_event.is_set():
                 try:
                     self.__logger.log("Gossiping with neighbours...")
+                    self.__gossip_lock.acquire()
                     success = self.__client.gossip_protocol(self.__gossip_batch)
                     if success:
-                        del self.__gossip_batch.sets[:]
-                        del self.__gossip_batch.rems[:]
+                        self.__gossip_batch = GateKV_gateway_pb2.GossipMessage(sets=[], rems=[])
+                    self.__gossip_lock.release()
                     time.sleep(self.__gossip_period)
 
                 except:
