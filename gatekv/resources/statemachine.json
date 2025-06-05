@@ -22,6 +22,7 @@
         {"source": {"$ref": "#/states/2"},  "destination": {"$ref": "#/states/2"},  "event": "READ",  "action": null},
         {"source": {"$ref": "#/states/1"},  "destination": {"$ref": "#/states/3"},  "event": "WRITE", "action": null},
 
+        {"source": {"$ref": "#/states/1"},  "destination": {"$ref": "#/states/1"},  "event": "DONE",  "action": null},
         {"source": {"$ref": "#/states/2"},  "destination": {"$ref": "#/states/1"},  "event": "DONE",  "action": null},
         {"source": {"$ref": "#/states/3"},  "destination": {"$ref": "#/states/1"},  "event": "DONE",  "action": null}
         

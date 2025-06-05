@@ -28,6 +28,24 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
 
         self.__logger = GateKV_GatewayNode_Logger("Server")
 
+    def __remove_duplicates(self, gossip_data):
+        for each in self.__gossip_batch.sets:
+            if each.key == gossip_data.key: self.__gossip_batch.sets.remove(each)
+
+        for each in self.__gossip_batch.rems:
+            if each.key == gossip_data.key: self.__gossip_batch.rems.remove(each)
+
+    def __append_set(self, gossip_data):
+        self.__remove_duplicates(gossip_data)
+        self.__gossip_batch.sets.extend([gossip_data])
+
+    def __append_rem(self, gossip_data):
+        self.__remove_duplicates(gossip_data)
+        self.__gossip_batch.rems.extend([gossip_data])
+        
+    def __append_to_gossip_batch(self, callback, gossip_data):
+        threading.Thread(callback(gossip_data)).start()
+
     def Register(self, request, context):
         self.__logger.log("Registering new neighbour...")
         try:
@@ -52,10 +70,10 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
 
             if success:
                 self.__version_map.setPairVersion(request.key)
-                gossip_data = GateKV_gateway_pb2.GossipData(key = request.key,
-                                                            value = request.value,
-                                                            version = self.__version_map.getPairVersion(request.key))
-                self.__gossip_batch.sets.extend([gossip_data])
+                self.__append_to_gossip_batch(self.__append_set,
+                                              GateKV_gateway_pb2.GossipData(key=request.key,
+                                                                            value=request.value,
+                                                                            version=self.__version_map.getPairVersion(request.key)))
 
             else:
                 self.__machine_map.removeStateMachine(request.key)
@@ -99,8 +117,8 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
             if success:
                 self.__machine_map.removeStateMachine(request.key)
                 self.__version_map.removePairVersion(request.key)
-                gossip_data = GateKV_gateway_pb2.GossipData(key = request.key)
-                self.__gossip_batch.rems.extend([gossip_data])
+                self.__append_to_gossip_batch(self.__append_rem,
+                                              GateKV_gateway_pb2.GossipData(key=request.key))
 
             else:
                 # Roll-back
@@ -116,25 +134,29 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
         set_success = False
         rem_success = False
 
-
         try:
-            # Set Phase
+            batch_set = GateKV_storage_pb2.BatchSetRequest(pairs = [])
+            batch_rem = GateKV_storage_pb2.BatchRemRequest(pairs = [])
+            
             for each in request.sets:
-                machine = self.__machine_map.getStateMachine(each.key)
-                machine.send_event(GateKV_GatewayNode_Events.WRITE)
+                try:
+                    machine = self.__machine_map.getStateMachine(each.key)
+                    machine.send_event(GateKV_GatewayNode_Events.WRITE)
+                    batch_set.pairs.extend([GateKV_storage_pb2.SetRequest(key=each.key, value=each.value)])
+                except Exception as e:
+                    request.sets.remove(each)
+                    self.__logger.log(e.with_traceback(None))
 
             for each in request.rems:
-                machine = self.__machine_map.getStateMachine(each.key)
-                machine.send_event(GateKV_GatewayNode_Events.WRITE)
+                try:
+                    machine = self.__machine_map.getStateMachine(each.key)
+                    machine.send_event(GateKV_GatewayNode_Events.WRITE)
+                    batch_rem.pairs.extend([GateKV_storage_pb2.RemRequest(key=each.key)])
+                except Exception as e:
+                    request.rems.remove(each)
+                    self.__logger.log(e.with_traceback(None))
             
-            batch_set = GateKV_storage_pb2.BatchSetRequest(
-                pairs = [GateKV_storage_pb2.SetRequest(key=each.key, value=each.value)
-                        for each in request.sets])
             set_success = self.__client.batch_set_protocol(batch_set)
-            
-            batch_rem = GateKV_storage_pb2.BatchRemRequest(
-                pairs = [GateKV_storage_pb2.RemRequest(key=each.key)
-                        for each in request.rems])
             rem_success = self.__client.batch_rem_protocol(batch_rem)
             
             if set_success:
@@ -148,7 +170,7 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
                     self.__version_map.removePairVersion(each.key)
             
             else:
-                for each in request.rems:
+                for each in batch_rem.pairs:
                     machine.send_event(GateKV_GatewayNode_Events.DONE)
 
         except Exception as e:
