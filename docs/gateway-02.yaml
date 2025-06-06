@@ -3,7 +3,7 @@ server:
   host: 127.0.0.1
   port: 9020 # Gateway-01
   workers: 5
-  gossip: 10 # 10 seconds
+  gossip: 0.5 # 5 seconds
   
 client:
   gateway:
@@ -22,4 +22,4 @@ client:
 
 statemachine:
   min_timeout: 0.000000052 # 52 nanoseconds
-  max_timeout: 0.010       # 10 milliseconds
+  max_timeout: 0.250       # 250 milliseconds

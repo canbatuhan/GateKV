@@ -3,7 +3,6 @@ server:
   host: 127.0.0.1
   port: 8000 # Storage-00
   workers: 5
-  gossip: 10 # 10 seconds
 
 client:
   gateway:
@@ -16,4 +15,4 @@ client:
 
 store:
   path: "storage-00.db"
-  dump: 10 # 10 seconds
+  dump: 100 # 100 seconds

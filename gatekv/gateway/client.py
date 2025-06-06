@@ -30,7 +30,6 @@ class GateKV_GatewayNode_Client:
     # Callbacks for Storage Servers
 
     def __callSetOnStorage(self, stub:GateKV_StorageStub, key, value):
-        self.__logger.log("Calling Set on Storage Neighbour...")
         try:
             response = stub.SetData(GateKV_storage_pb2.SetRequest(key=key, value=value))
             return response.success
@@ -39,7 +38,6 @@ class GateKV_GatewayNode_Client:
         return (False)
 
     def __callGetOnStorage(self, stub:GateKV_StorageStub, key, value=None):
-        self.__logger.log("Calling Get on Storage Neighbour...")
         try:
             response = stub.Get(GateKV_storage_pb2.GetRequest(key = key))
             return response.success, response.value
@@ -48,7 +46,6 @@ class GateKV_GatewayNode_Client:
         return (False, None)
 
     def __callRemOnStorage(self, stub:GateKV_StorageStub, key, value=None):
-        self.__logger.log("Calling Remove on Storage Neighbour...")
         try:
             response = stub.RemData(GateKV_storage_pb2.RemRequest(key=key))
             return response.success
@@ -56,8 +53,7 @@ class GateKV_GatewayNode_Client:
             self.__logger.log(e.with_traceback(None))
         return (False)
     
-    def __callBatchSetOnStorage(self, stub:GateKV_StorageStub, batch, dummy=None):
-        self.__logger.log("Calling BatchSet on Storage Neighbour...")
+    def __callBatchSetOnStorage(self, stub:GateKV_StorageStub, batch):
         try:
             request = GateKV_storage_pb2.BatchSetRequest()
             request.pairs.extend(batch.pairs)
@@ -67,8 +63,7 @@ class GateKV_GatewayNode_Client:
             self.__logger.log(e.with_traceback(None))
         return (False)
 
-    def __callBatchRemOnStorage(self, stub:GateKV_StorageStub, batch, dummy=None):
-        self.__logger.log("Calling BatchRemove on Storage Neighbour...")
+    def __callBatchRemOnStorage(self, stub:GateKV_StorageStub, batch):
         try:
             request = GateKV_storage_pb2.BatchRemRequest()
             request.pairs.extend(batch.pairs)
@@ -85,10 +80,16 @@ class GateKV_GatewayNode_Client:
         for _, stub in self.__storage_stubs.items():
             responses.append(callback(stub, key, value))
         return responses
+    
+    def __broadcast_batch_to_storage(self, callback, batch):
+        responses = []
+        for _, stub in self.__storage_stubs.items():
+            responses.append(callback(stub, batch))
+        return responses
 
     def __broadcast_to_gateway(self, callback, request):
         responses = []
-        for stub in self.__gateway_stubs.values():
+        for _, stub in self.__gateway_stubs.items():
             responses.append(callback(stub, request))
         return responses
     
@@ -139,7 +140,6 @@ class GateKV_GatewayNode_Client:
                 self.__logger.log(e.with_traceback(None))
 
     def set_protocol(self, key, value):
-        self.__logger.log("Setting new key-value pair on Storage Neighbours...")
         responses = self.__broadcast_to_storage(self.__callSetOnStorage, key, value)
         return responses.count(True) > len(responses) // 2
 
@@ -153,11 +153,11 @@ class GateKV_GatewayNode_Client:
         return responses.count(True) > len(responses) // 2
     
     def batch_set_protocol(self, batch):
-        responses = self.__broadcast_to_storage(self.__callBatchSetOnStorage, batch)
+        responses = self.__broadcast_batch_to_storage(self.__callBatchSetOnStorage, batch)
         return responses.count(True) > len(responses) // 2
 
     def batch_rem_protocol(self, batch):
-        responses = self.__broadcast_to_storage(self.__callBatchRemOnStorage, batch)
+        responses = self.__broadcast_batch_to_storage(self.__callBatchRemOnStorage, batch)
         return responses.count(True) > len(responses) // 2
     
     def gossip_protocol(self, batch):

@@ -14,7 +14,7 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
         super().__init__()
         self.__config = server_conf
         self.node_alias = server_conf["alias"]
-        self.__server = grpc.server(thread_pool=ThreadPoolExecutor(max_workers=self.__config.get("workers")))
+        self.__server = grpc.server(thread_pool=ThreadPoolExecutor())
         GateKV_storage_pb2_grpc.add_GateKV_StorageServicer_to_server(self, self.__server)
         self.__server.add_insecure_port("0.0.0.0:{}".format(self.__config.get("port")))
         
@@ -41,59 +41,89 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
         return GateKV_storage_pb2.RegisterResponse(alias = self.__config.get("alias"))
     
     def Set(self, request, context):
-        self.__logger.log("Setting new key-value pair...")
-        gateway_response = self.__client.callSetOnGateway(request.key, request.value)
-        return GateKV_storage_pb2.SetResponse(success=gateway_response)
+        try:
+            self.__logger.log("Setting new key-value pair...")
+            gateway_response = self.__client.callSetOnGateway(request.key, request.value)
+            return GateKV_storage_pb2.SetResponse(success=gateway_response)
+        except Exception as e:
+            self.__logger.log(e.with_traceback(None))
+            return GateKV_storage_pb2.SetResponse(success=False)
     
     def SetData(self, request, context):
-        self.__storage.set(request.key, request.value)
-        return GateKV_storage_pb2.SetResponse(success=True)
+        try:
+            success = self.__storage.set(request.key, request.value)
+            return GateKV_storage_pb2.SetResponse(success=success)
+        except Exception as e:
+            self.__logger.log(e.with_traceback(None))
+            return GateKV_storage_pb2.SetResponse(success=False)
     
     def Get(self, request, context):
-        self.__logger.log("Getting key-value pair...")
-        visited_nodes = set(request.visitedNodes)
-        visited_nodes.add(self.node_alias)
+        try:
+            self.__logger.log("Getting key-value pair...")
+            visited_nodes = set(request.visitedNodes)
+            visited_nodes.add(self.node_alias)
 
-        value = self.__storage.get(request.key)
-        if value is not None:
-            print(f"Node '{self.node_alias}' found key '{request.key}' locally.")
-            return GateKV_storage_pb2.GetResponse(success=True, value=value, visitedNodes=list(visited_nodes))
+            value = self.__storage.get(request.key)
+            if value is not None:
+                print(f"Node '{self.node_alias}' found key '{request.key}' locally.")
+                return GateKV_storage_pb2.GetResponse(success=True, value=value, visitedNodes=list(visited_nodes))
 
-        print(f"Node '{self.node_alias}' didn't find key '{request.key}', querying other nodes...")
-        response = self.__client.callGetOnStorage(request.key, visited_nodes)
+            print(f"Node '{self.node_alias}' didn't find key '{request.key}', querying other nodes...")
+            response = self.__client.callGetOnStorage(request.key, visited_nodes)
 
-        return GateKV_storage_pb2.GetResponse(
-            success=response.success,
-            value=response.value,
-            visitedNodes=response.visitedNodes
-        )
+            return GateKV_storage_pb2.GetResponse(
+                success=response.success,
+                value=response.value,
+                visitedNodes=response.visitedNodes)
+        
+        except Exception as e:
+            self.__logger.log(e.with_traceback(None))
+            return GateKV_storage_pb2.GetResponse(
+                success=False,
+                value=None,
+                visitedNodes=response.visitedNodes)
     
     def Rem(self, request, context):
-        self.__logger.log("Removing key-value pair...")
-        gateway_response = self.__client.callRemOnGateway(request.key)
-        return GateKV_storage_pb2.RemResponse(success=gateway_response)
+        try:
+            self.__logger.log("Removing key-value pair...")
+            gateway_response = self.__client.callRemOnGateway(request.key)
+            return GateKV_storage_pb2.RemResponse(success=gateway_response)
+        except Exception as e:
+            self.__logger.log(e.with_traceback(None))
+            return GateKV_storage_pb2.RemResponse(success=False)
     
     def RemData(self, request, context):
-        value = self.__storage.get(request.key)
-        if value == None:
+        try:
+            self.__storage.rem(request.key)
+            return GateKV_storage_pb2.RemResponse(success=True)
+        except Exception as e:
+            self.__logger.log(e.with_traceback(None))
             return GateKV_storage_pb2.RemResponse(success=False)
-        self.__storage.rem(request.key)
-        return GateKV_storage_pb2.RemResponse(success=True)
     
     def BatchSet(self, request, context):
-        self.__logger.log("Setting new key-value pairs...")
-        success = True
-        for item in request.pairs:
-            success = success and self.__storage.set(item.key, item.value)
-        return GateKV_storage_pb2.BatchSetResponse(success=True)
+        try:
+            self.__logger.log("Setting new key-value pairs...")
+            success = True
+            self.__logger.log(f"Batch Size (Set) = {len(request.pairs)}")
+            for item in list(request.pairs):
+                success = success and self.__storage.set(item.key, item.value)
+            return GateKV_storage_pb2.BatchSetResponse(success=success)
+        except Exception as e:
+            self.__logger.log(e.with_traceback(None))
+            return GateKV_storage_pb2.BatchSetResponse(success=False)
     
     def BatchRem(self, request, context):
-        self.__logger.log("Removing key-value pairs...")
-        success = True
-        for item in request.pairs:
-            success = success and self.__storage.rem(item.key)
-        return GateKV_storage_pb2.BatchRemResponse(success=True)
-    
+        try:
+            self.__logger.log("Removing key-value pairs...")
+            success = True
+            self.__logger.log(f"Batch Size (Rem) = {len(request.pairs)}")
+            for item in list(request.pairs):
+                success = success and self.__storage.rem(item.key)
+            return GateKV_storage_pb2.BatchRemResponse(success=True)
+        except Exception as e:
+            self.__logger.log(e.with_traceback(None))
+            return GateKV_storage_pb2.BatchRemResponse(success=False)
+        
     def __start_server(self):
         self.__server.start()
 
@@ -110,8 +140,8 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
                     self.__storage.dump()
                     time.sleep(self.__dump_period)
 
-                except:
-                    pass
+                except Exception as e:
+                    self.__logger.log(e.with_traceback(None))
 
         threading.Thread(target = __loop, daemon = True).start()
 

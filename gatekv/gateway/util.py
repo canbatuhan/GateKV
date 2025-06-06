@@ -1,3 +1,4 @@
+import copy
 from typing import Dict
 from gatekv.gateway.statemachine import GateKV_GatewayNode_ReplicatedStateMachine
 
@@ -5,16 +6,18 @@ class GateKV_GatewayNode_StateMachineMap:
     def __init__(self, state_machine_conf):
         self.__dict:Dict[str, GateKV_GatewayNode_ReplicatedStateMachine] = dict()
         self.__config = state_machine_conf
+        self.__sample_machine = GateKV_GatewayNode_ReplicatedStateMachine(self.__config)
 
     def getStateMachine(self, key):
         machine = self.__dict.get(key)
         if machine == None:
-            machine = GateKV_GatewayNode_ReplicatedStateMachine(self.__config)
+            machine = copy.deepcopy(self.__sample_machine)
             self.__dict.update({key : machine})
-        return machine
+        return self.__dict.get(key)
 
     def removeStateMachine(self, key):
-        self.__dict.pop(key)
+        try: self.__dict.pop(key)
+        except: pass
 
 class GateKV_GatewayNode_PairVersionMap:
     def __init__(self):
@@ -43,12 +46,12 @@ class GateKV_GatewayNode_PairVersionMap:
             self.__addPairVersion(key)
 
     def removePairVersion(self, key):
-        self.__dict.pop(key)
-
+        try: self.__dict.pop(key)
+        except: pass
 
 class GateKV_GatewayNode_Logger:
     def __init__(self, component):
         self.__component = component
 
     def log(self, message):
-        print("[GatewayNode-{}] : {}".format(self.__component, message))
+        print("[Logger-{}] : {}".format(self.__component, message))
