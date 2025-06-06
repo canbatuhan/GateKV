@@ -17,4 +17,4 @@ client:
 
 store:
   path: "storage-04.db"
-  dump: 100 # 100 seconds
+  dump: 5 # 5 seconds

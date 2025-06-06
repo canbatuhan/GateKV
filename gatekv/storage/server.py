@@ -103,11 +103,10 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
     def BatchSet(self, request, context):
         try:
             self.__logger.log("Setting new key-value pairs...")
-            success = True
             self.__logger.log(f"Batch Size (Set) = {len(request.pairs)}")
-            for item in list(request.pairs):
-                success = success and self.__storage.set(item.key, item.value)
-            return GateKV_storage_pb2.BatchSetResponse(success=success)
+            for item in request.pairs:
+                self.__storage.set(item.key, item.value)
+            return GateKV_storage_pb2.BatchSetResponse(success=True)
         except Exception as e:
             self.__logger.log(e.with_traceback(None))
             return GateKV_storage_pb2.BatchSetResponse(success=False)
@@ -115,10 +114,9 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
     def BatchRem(self, request, context):
         try:
             self.__logger.log("Removing key-value pairs...")
-            success = True
             self.__logger.log(f"Batch Size (Rem) = {len(request.pairs)}")
-            for item in list(request.pairs):
-                success = success and self.__storage.rem(item.key)
+            for item in request.pairs:
+                self.__storage.rem(item.key)
             return GateKV_storage_pb2.BatchRemResponse(success=True)
         except Exception as e:
             self.__logger.log(e.with_traceback(None))

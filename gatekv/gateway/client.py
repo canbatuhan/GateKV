@@ -55,9 +55,7 @@ class GateKV_GatewayNode_Client:
     
     def __callBatchSetOnStorage(self, stub:GateKV_StorageStub, batch):
         try:
-            request = GateKV_storage_pb2.BatchSetRequest()
-            request.pairs.extend(batch.pairs)
-            response = stub.BatchSet(request)
+            response = stub.BatchSet(batch)
             return response.success
         except Exception as e:
             self.__logger.log(e.with_traceback(None))
@@ -65,9 +63,7 @@ class GateKV_GatewayNode_Client:
 
     def __callBatchRemOnStorage(self, stub:GateKV_StorageStub, batch):
         try:
-            request = GateKV_storage_pb2.BatchRemRequest()
-            request.pairs.extend(batch.pairs)
-            response = stub.BatchRem(request)
+            response = stub.BatchRem(batch)
             return response.success
         except Exception as e:  
             self.__logger.log(e.with_traceback(None))

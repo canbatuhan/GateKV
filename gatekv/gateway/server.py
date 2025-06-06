@@ -41,16 +41,14 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
                 break
 
     def __append_set(self, gossip_data):
-        self.__gossip_lock.acquire()
-        self.__remove_duplicates(gossip_data)
-        self.__gossip_batch.sets.extend([gossip_data])
-        self.__gossip_lock.release()
+        with self.__gossip_lock:
+            self.__remove_duplicates(gossip_data)
+            self.__gossip_batch.sets.extend([gossip_data])
 
     def __append_rem(self, gossip_data):
-        self.__gossip_lock.acquire()
-        self.__remove_duplicates(gossip_data)
-        self.__gossip_batch.rems.extend([gossip_data])
-        self.__gossip_lock.release()
+        with self.__gossip_lock:
+            self.__remove_duplicates(gossip_data)
+            self.__gossip_batch.rems.extend([gossip_data])
         
     def __append_to_gossip_batch(self, callback, gossip_data):
         threading.Thread(target=callback, args=(gossip_data,), daemon=True).start()
@@ -146,7 +144,7 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
         self.__logger.log("Gossiping with neighbours...")
         set_success = False
         rem_success = False
-
+        
         try:
             batch_set = GateKV_storage_pb2.BatchSetRequest(pairs = [])
             batch_rem = GateKV_storage_pb2.BatchRemRequest(pairs = [])
@@ -171,8 +169,6 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
             
             set_success = self.__client.batch_set_protocol(batch_set)
             rem_success = self.__client.batch_rem_protocol(batch_rem)
-            self.__logger.log(f"Batch Size (Set) = {len(batch_set.pairs)}")
-            self.__logger.log(f"Batch Size (Rem) = {len(batch_rem.pairs)}")
 
             if set_success:
                 for each in batch_set.pairs:
@@ -203,15 +199,15 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
             while not self.__gossip_stop.is_set():
                 try:
                     self.__logger.log("Sending gossip message to neighbours...")
-                    self.__gossip_lock.acquire()
-                    success = self.__client.gossip_protocol(self.__gossip_batch)
-                    if success:
-                        del self.__gossip_batch.sets[:]
-                        del self.__gossip_batch.rems[:]
-                    self.__gossip_lock.release()
+                    with self.__gossip_lock:
+                        success = self.__client.gossip_protocol(self.__gossip_batch)
+                        if success:
+                            del self.__gossip_batch.sets[:]
+                            del self.__gossip_batch.rems[:]
                     time.sleep(self.__gossip_period)
-                except:
-                    pass
+
+                except Exception as e:
+                    self.__logger.log(e.with_traceback(None))
 
         threading.Thread(target = __loop, daemon = True).start()
 
