@@ -27,8 +27,6 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
         self.__logger = GateKV_GatewayNode_Logger("Server")
 
     def Register(self, request, context):
-        self.__logger.log("Registering new neighbour...")
-
 
         try:
             self.__client.register_neighbour(request.type,
@@ -42,7 +40,6 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
     
     def Set(self, request, context):
         try:
-            self.__logger.log("Setting new key-value pair...")
             gateway_response = self.__client.callSetOnGateway(request.key, request.value)
             return GateKV_storage_pb2.SetResponse(success=gateway_response)
         except Exception as e:
@@ -59,7 +56,6 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
     
     def Get(self, request, context):
         try:
-            self.__logger.log("Getting key-value pair...")
             visited_nodes = set(request.visitedNodes)
             visited_nodes.add(self.node_alias)
 
@@ -85,7 +81,6 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
     
     def Rem(self, request, context):
         try:
-            self.__logger.log("Removing key-value pair...")
             gateway_response = self.__client.callRemOnGateway(request.key)
             return GateKV_storage_pb2.RemResponse(success=gateway_response)
         except Exception as e:
@@ -102,8 +97,6 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
     
     def BatchSet(self, request, context):
         try:
-            self.__logger.log("Setting new key-value pairs...")
-            self.__logger.log(f"Batch Size (Set) = {len(request.pairs)}")
             for item in request.pairs:
                 self.__storage.set(item.key, item.value)
             return GateKV_storage_pb2.BatchSetResponse(success=True)
@@ -113,8 +106,6 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
     
     def BatchRem(self, request, context):
         try:
-            self.__logger.log("Removing key-value pairs...")
-            self.__logger.log(f"Batch Size (Rem) = {len(request.pairs)}")
             for item in request.pairs:
                 self.__storage.rem(item.key)
             return GateKV_storage_pb2.BatchRemResponse(success=True)

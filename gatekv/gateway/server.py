@@ -141,7 +141,6 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
         return GateKV_gateway_pb2.RemResponse(success = success)
         
     def Gossip(self, request, context):
-        self.__logger.log("Gossiping with neighbours...")
         set_success = False
         rem_success = False
         

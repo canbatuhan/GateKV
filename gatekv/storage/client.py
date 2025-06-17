@@ -20,7 +20,6 @@ class GateKV_StorageNode_Client:
         self.__logger = GateKV_GatewayNode_Logger("Client")
 
     def register_neighbour(self, type, alias, host, port):
-        self.__logger.log("Registering new neighbour...")
 
         channel = grpc.insecure_channel("{}:{}".format(host, port))
         if type == "gateway":
@@ -31,7 +30,6 @@ class GateKV_StorageNode_Client:
             self.__storage_stubs.update({alias : stub})
 
     def register_protocol(self, type, alias, host, port):
-        self.__logger.log("Registering new protocol...")
 
         gateway = self.__config.get("gateway")
         try:
@@ -66,19 +64,16 @@ class GateKV_StorageNode_Client:
                 print(e.with_traceback(None))
             
     def callSetOnGateway(self, key, value):
-        self.__logger.log("Setting new key-value pair on gateway...")
         request = GateKV_gateway_pb2.SetRequest(key=key, value=value)
         response = self.__gateway_stub.Set(request)
         return response.success
 
     def callRemOnGateway(self, key):
-        self.__logger.log("Removing key-value pair on gateway...")  
         request = GateKV_gateway_pb2.RemRequest(key=key)
         response = self.__gateway_stub.Rem(request) 
         return response.success
 
     def callGetOnStorage(self, key, visited_nodes):
-        self.__logger.log("Getting value for key on storage...")
         
         visited_nodes = set(visited_nodes)
         result = {'response': None}
