@@ -197,7 +197,6 @@ class GateKV_GatewayNode_Server(GateKV_GatewayServicer):
         def __loop():
             while not self.__gossip_stop.is_set():
                 try:
-                    self.__logger.log("Sending gossip message to neighbours...")
                     with self.__gossip_lock:
                         success = self.__client.gossip_protocol(self.__gossip_batch)
                         if success:
