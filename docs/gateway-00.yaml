@@ -1,20 +1,22 @@
 server:
   alias: Gateway-00
-  host: 127.0.0.1
+  host: 192.168.1.120 # pire-00
   port: 9000 # Gateway-00
   workers: 5
   gossip: 0.5 # 5 seconds
 
 client:
   gateway:
-    - host: 127.0.0.1
-      port: 9010 # Gateway-01
+    - host: 192.168.1.126 # pire-06
+      port: 9000 # Gateway-01
 
   storage:
-    - host: 127.0.0.1
+    - host: 192.168.1.121 # pire-01
       port: 8000 # Storage-00
-    - host: 127.0.0.1
-      port: 8010 # Storage-01
+    - host: 192.168.1.123 # pire-03
+      port: 8000 # Storage-01
+    - host: 192.168.1.125 # pire-05
+      port: 8000 # Storage-02
 
 statemachine:
   min_timeout: 0.000000052 # 52 nanoseconds

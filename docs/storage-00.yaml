@@ -1,17 +1,19 @@
 server:
   alias: Storage-00
-  host: 127.0.0.1
+  host: 192.168.1.121 # pire-01
   port: 8000 # Storage-00
   workers: 5
 
 client:
   gateway:
-    host: 127.0.0.1
+    host: 192.168.1.120 # pire-00
     port: 9000 # Gateway-00
       
   storage:
-    - host: 127.0.0.1
-      port: 8010 # Storage-01
+    - host: 192.168.1.123 # pire-03
+      port: 8000 # Storage-01
+    - host: 192.168.1.125 # pire-05
+      port: 8000 # Storage-02
 
 store:
   path: "storage-00.db"
