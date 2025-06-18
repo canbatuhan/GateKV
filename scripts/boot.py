@@ -39,7 +39,7 @@ client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 for node, config in NODES.items():
-    remote_cmd = f"nohup python {PATH+config.get("file")} --config={PATH+config.get("config")} &"
+    remote_cmd = f"nohup python {PATH+config.get('file')} --config={PATH+config.get('config')} &"
 
     try:
         print(f"Connecting to {config.get("host")}...")
