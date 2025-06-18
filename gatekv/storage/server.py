@@ -61,10 +61,8 @@ class GateKV_StorageNode_Server(GateKV_storage_pb2_grpc.GateKV_StorageServicer):
 
             value = self.__storage.get(request.key)
             if value is not None:
-                print(f"Node '{self.node_alias}' found key '{request.key}' locally.")
                 return GateKV_storage_pb2.GetResponse(success=True, value=value, visitedNodes=list(visited_nodes))
 
-            print(f"Node '{self.node_alias}' didn't find key '{request.key}', querying other nodes...")
             response = self.__client.callGetOnStorage(request.key, visited_nodes)
 
             return GateKV_storage_pb2.GetResponse(

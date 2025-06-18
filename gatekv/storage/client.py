@@ -94,8 +94,6 @@ class GateKV_StorageNode_Client:
                     visited_nodes.add(alias)
                 new_visited = set(visited_nodes)
 
-                print(f"visiting: {alias}, current visited: {new_visited}")
-
                 request = GateKV_storage_pb2.GetRequest(
                     key=key,
                     visitedNodes=list(new_visited)
