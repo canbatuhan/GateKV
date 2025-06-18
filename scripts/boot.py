@@ -3,7 +3,7 @@ import paramiko
 USERNAME = "pi_user"
 PASSWORD = "tolga.halit.batu"
 
-PATH = "/home/batuhan/GateKV/"
+PATH = "/home/batuhan/pi_user/"
 
 NODES = {
     "gateway-00": {"host": "192.168.1.120",
