@@ -6,7 +6,7 @@ server:
 
 client:
   gateway:
-    host: 192.168.1.126 # pire-06
+    host: 192.168.1.129 # pire-09
     port: 9000 # Gateway-01
       
   storage:
