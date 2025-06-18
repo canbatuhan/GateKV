@@ -43,8 +43,7 @@ for node, config in NODES.items():
         client.connect(hostname=config.get("host"), username=USERNAME, password=PASSWORD)
 
         print("Executing remote command...")
-        stdin, stdout, stderr = client.exec_command(f"cd /home/pi_user/GateKV")
-        stdin, stdout, stderr = client.exec_command(f"nohup python {config.get('file')} --config={config.get('config')} &")
+        stdin, stdout, stderr = client.exec_command(f"cd /home/pi_user/GateKV && nohup python {config.get('file')} --config={config.get('config')} &")
 
         error_output = stderr.read().decode()
         if error_output:
