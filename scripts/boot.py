@@ -42,7 +42,7 @@ for node, config in NODES.items():
     remote_cmd = f"nohup python {PATH+config.get('file')} --config={PATH+config.get('config')} &"
 
     try:
-        print(f"Connecting to {config.get("host")}...")
+        print(f"Connecting to {config.get('host')}...")
         client.connect(hostname=config.get("host"), username=USERNAME, password=PASSWORD)
 
         print("Executing remote command...")
