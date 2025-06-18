@@ -3,8 +3,6 @@ import paramiko
 USERNAME = "pi_user"
 PASSWORD = "tolga.halit.batu"
 
-PATH = "/home/pi_user/GateKV/"
-
 NODES = {
     "gateway-00": {"host": "192.168.1.120",
                    "file": "gateway.py",
@@ -45,7 +43,7 @@ for node, config in NODES.items():
         client.connect(hostname=config.get("host"), username=USERNAME, password=PASSWORD)
 
         print("Executing remote command...")
-        stdin, stdout, stderr = client.exec_command(f"cd {PATH}")
+        stdin, stdout, stderr = client.exec_command(f"cd /home/pi_user/GateKV")
         stdin, stdout, stderr = client.exec_command(f"nohup python {config.get('file')} --config={config.get('config')} &")
 
         error_output = stderr.read().decode()
